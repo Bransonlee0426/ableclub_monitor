@@ -8,6 +8,7 @@ sqlalchemy
 # HTTP requests and web scraping
 requests
 beautifulsoup4
+selenium
 
 # Settings management and data validation
 pydantic
