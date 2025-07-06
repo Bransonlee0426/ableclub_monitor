@@ -1,0 +1,14 @@
+# Core application framework
+fastapi
+uvicorn[standard]
+
+# Database
+sqlalchemy
+
+# HTTP requests and web scraping
+requests
+beautifulsoup4
+
+# Settings management and data validation
+pydantic
+python-dotenv
