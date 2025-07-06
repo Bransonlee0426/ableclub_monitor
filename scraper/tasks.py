@@ -4,6 +4,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from bs4 import BeautifulSoup, Tag
+import time
+import os
 
 def run_scraping_task():
     """
@@ -50,8 +52,28 @@ def scrape_main_menu():
         else:
             print("Could not find 'mainmenu-inner' container in BeautifulSoup.")
 
-    except TimeoutException:
+    except TimeoutException as e:
+        # This block executes when the wait times out
         print("Timeout: The element 'mainmenu-inner' was not found within 10 seconds.")
+        print(f"Error details: {e}")
+
+        # Define the logs directory
+        log_dir = "logs"
+        os.makedirs(log_dir, exist_ok=True) # Ensure the directory exists
+
+        # Generate a unique filename using a timestamp
+        timestamp = int(time.time())
+        screenshot_file = os.path.join(log_dir, f"debug_screenshot_{timestamp}.png")
+        page_source_file = os.path.join(log_dir, f"debug_page_{timestamp}.html")
+
+        # Save the screenshot of the current page
+        driver.save_screenshot(screenshot_file)
+        print(f"Saved screenshot for debugging: {screenshot_file}")
+
+        # Save the HTML source of the current page
+        with open(page_source_file, "w", encoding="utf-8") as f:
+            f.write(driver.page_source)
+        print(f"Saved page source for debugging: {page_source_file}")
     
     finally:
         # Close the browser
