@@ -9,6 +9,7 @@ sqlalchemy
 requests
 beautifulsoup4
 selenium
+playwright
 
 # Settings management and data validation
 pydantic
