@@ -1,6 +1,6 @@
 # AbleClub Monitor
 
-一個用於監控和抓取 AbleClub Taiwan 網站資訊的專案，包含 LINE 通知功能。
+一個用於監控和抓取 AbleClub Taiwan 網站資訊的專案，包含 Email 通知功能。
 
 ## 🚀 開發環境啟動指南
 
@@ -15,7 +15,8 @@ cp .env.example .env
 
 # 3. 編輯 .env 檔案，設定必要的環境變數
 # DATABASE_URL="sqlite:///./ableclub_monitor.db"
-# LINE_NOTIFY_TOKEN="your_line_notify_token"
+# EMAIL_USER="your_email@gmail.com"
+# EMAIL_PASSWORD="your_app_password"
 ```
 
 ### ⚡ 開發環境啟動流程
@@ -105,7 +106,6 @@ ableclub_monitor/
 │   └── event.py           # 事件資料模型
 ├── notifications/          # 通知系統
 │   ├── __init__.py
-│   ├── line_auth_router.py # LINE OAuth 認證路由
 │   └── sender.py           # 通知發送邏輯
 ├── scraper/               # 網頁抓取功能
 │   ├── __init__.py
@@ -129,7 +129,6 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 # API 服務會在以下位址運行：
 # - 主要 API: http://127.0.0.1:8000
 # - API 文件: http://127.0.0.1:8000/docs
-# - LINE 認證: http://127.0.0.1:8000/api/line/callback
 ```
 
 ### 網頁抓取功能
@@ -142,20 +141,22 @@ source .venv/bin/activate
 python -m scraper.tasks
 ```
 
-### LINE 通知功能測試
+### Email 通知功能測試
 
 ```bash
 # 測試 API 健康狀態
 curl http://127.0.0.1:8000/
 
-# 測試 LINE 認證端點（錯誤處理）
-curl "http://127.0.0.1:8000/api/line/callback"
+# 測試 Email 通知
+curl -X GET "http://127.0.0.1:8000/api/notifications/test-email"
 
-# 測試假授權碼處理
-curl "http://127.0.0.1:8000/api/line/callback?code=fake_code&state=12345"
+# 發送自訂 Email 通知
+curl -X POST "http://127.0.0.1:8000/api/notifications/sendEmail" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "測試訊息", "subject": "測試主旨"}'
 ```
 
-## 🌐 LINE 通知設定
+## 🌐 Email 通知設定
 
 ### 環境變數設定
 
@@ -165,31 +166,11 @@ curl "http://127.0.0.1:8000/api/line/callback?code=fake_code&state=12345"
 # 資料庫連線
 DATABASE_URL="sqlite:///./ableclub_monitor.db"
 
-# LINE Notify Token
-LINE_NOTIFY_TOKEN="your_line_notify_token"
-
-# LINE OAuth 設定（已預設）
-LINE_CLIENT_ID="2007708517"
-LINE_CLIENT_SECRET="ce564290c76b2def3620823c1b8ff5e3"
-LINE_REDIRECT_URI="http://localhost:8000/api/line/callback"
-```
-
-### 真實測試流程
-
-```bash
-# 1. 安裝 ngrok（用於建立公開 URL）
-# brew install ngrok  # macOS
-# 或下載：https://ngrok.com/download
-
-# 2. 建立公開 tunnel
-ngrok http 8000
-
-# 3. 更新 LINE Developers Console 的回調 URL
-# 使用 ngrok 提供的 HTTPS URL，例如：
-# https://abc123.ngrok.io/api/line/callback
-
-# 4. 測試授權流程
-# 訪問 LINE 授權頁面進行完整測試
+# Email 通知設定
+EMAIL_USER="your_gmail@gmail.com"
+EMAIL_PASSWORD="your_16_digit_app_password"
+DEFAULT_NOTIFICATION_EMAIL="recipient@example.com"
+EMAIL_DEBUG_MODE=false
 ```
 
 ## ⚠️ 開發注意事項
@@ -198,5 +179,4 @@ ngrok http 8000
 2. **環境變數**：確保 `.env` 檔案正確設定
 3. **依賴管理**：新增套件後要更新 `requirements.txt`
 4. **服務器狀態**：開發時保持 FastAPI 服務器運行
-5. **LINE 測試**：真實測試需要 ngrok 和 LINE Developers Console 設定
-6. **代碼提交**：提交前確保代碼能在虛擬環境中正常運行
+5. **代碼提交**：提交前確保代碼能在虛擬環境中正常運行

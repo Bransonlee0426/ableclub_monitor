@@ -9,27 +9,16 @@ class Settings(BaseSettings):
     Reads environment variables from a .env file.
     """
     DATABASE_URL: str = Field(default="sqlite:///./ableclub_monitor.db", description="Database connection URL")
-    LINE_NOTIFY_TOKEN: str = Field(default="", description="LINE Notify API Token")
-
-    # --- New settings for LINE OAuth ---
-    # These are added for the LINE Notify OAuth 2.0 flow.
     
-    # Channel ID from LINE Developers console.
-    LINE_CLIENT_ID: str = "2007708517"
+    # --- Email 通知設定 ---
+    EMAIL_DEBUG_MODE: bool = Field(default=True, description="Email 除錯模式，啟用時只輸出到 console")
+    EMAIL_USER: str = Field(default="", description="SMTP 用戶名")
+    EMAIL_PASSWORD: str = Field(default="", description="SMTP 密碼或應用程式密碼")
+    DEFAULT_NOTIFICATION_EMAIL: str = Field(default="", description="預設通知接收 Email")
     
-    # Channel Secret from LINE Developers console.
-    LINE_CLIENT_SECRET: str = "ce564290c76b2def3620823c1b8ff5e3"
-    
-    # The callback URL that LINE will redirect to after user authorization.
-    # For local development, this needs to be a public URL (e.g., using ngrok).
-    LINE_REDIRECT_URI: str = "http://localhost:8000/api/line/callback"
-    
-    # The URL to redirect the user to after a successful authorization.
-    FRONTEND_REDIRECT_SUCCESS_URL: str = "http://localhost:8080/line-bind-success"
-    
-    # The URL to redirect the user to after a failed authorization.
-    FRONTEND_REDIRECT_FAILURE_URL: str = "http://localhost:8080/line-bind-failure"
-    # --- End of new settings ---
+    # --- Telegram 通知設定 ---
+    TELEGRAM_BOT_TOKEN: str = Field(default="", description="Telegram Bot Token")
+    TELEGRAM_CHAT_ID: str = Field(default="", description="Telegram Chat ID")
 
     class Config:
         # The name of the file to load environment variables from.
