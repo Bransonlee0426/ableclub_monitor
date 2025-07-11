@@ -14,3 +14,10 @@ playwright
 # Settings management and data validation
 pydantic
 python-dotenv
+
+# Testing
+pytest
+pytest-cov
+pytest-mock
+pytest-asyncio
+httpx
