@@ -180,3 +180,65 @@ EMAIL_DEBUG_MODE=false
 3. **依賴管理**：新增套件後要更新 `requirements.txt`
 4. **服務器狀態**：開發時保持 FastAPI 服務器運行
 5. **代碼提交**：提交前確保代碼能在虛擬環境中正常運行
+
+## 🧪 測試標準作業程序 (SOP)
+
+本專案採用 Test-Driven Development (TDD) 方法，並使用 `pytest` 作為測試框架。遵循此 SOP 能確保程式碼品質與功能的正確性。
+
+### 1. 執行完整測試
+
+在進行任何程式碼修改前後，都應執行完整的單元測試。
+
+```bash
+# 確保虛擬環境已激活
+source .venv/bin/activate
+
+# 執行 pytest
+pytest
+```
+
+### 2. 解讀測試結果
+
+`pytest` 的輸出會包含以下幾個關鍵部分：
+
+- **測試進度**：`[  6%] [ 13%] ... [100%]` 顯示測試執行進度。
+- **測試結果**：每個測試後面會標示 `PASSED` (通過), `FAILED` (失敗), 或 `SKIPPED` (跳過)。
+- **失敗詳情 (`FAILURES`)**：這是最重要的部分。它會詳細列出每個失敗測試的：
+    - **失敗點**：用 `>` 標示出在哪一行程式碼發生錯誤。
+    - **錯誤類型**：例如 `AssertionError` (斷言失敗) 或 `AttributeError` (屬性錯誤)。
+    - **錯誤訊息**：提供詳細的錯誤原因，例如 `assert 200 == 401`。
+- **警告摘要 (`warnings summary`)**：列出程式碼中使用了過時語法或存在潛在問題的地方。警告不會導致測試失敗，但建議修復。
+- **總結 (`short test summary info`)**：在結尾提供一個簡潔的統計，例如 `1 failed, 14 passed, 8 warnings`。
+
+### 3. 測試修復流程
+
+當測試出現 `FAILED` 或 `warnings` 時，請依照以下流程進行修復：
+
+#### 第一階段：修復 `FAILED` 的測試
+
+1.  **優先處理 `AttributeError` 或 `ImportError`**：
+    *   **原因**：這類錯誤通常表示測試中的 Mock 路徑不正確，或是模組的 import 結構有問題。它們會導致大量測試無法正常執行。
+    *   **解法**：仔細檢查 `mocker.patch("path.to.your.function")` 的路徑是否與被測試模組中實際 import 和使用的名稱一致。例如，如果 `auth.py` 中是 `from crud import user as crud_user`，那麼 Mock 路徑就應該是 `...auth.crud_user.some_function`。
+
+2.  **處理 `AssertionError`**：
+    *   **原因**：這表示 API 的實際行為與測試案例的預期結果不符。
+    *   **解法**：
+        1.  **檢查 API 邏輯**：回到對應的端點函式 (例如 `app/api/v1/endpoints/auth.py`)，檢查業務邏輯是否正確實作。是否在正確的條件下回傳了正確的狀態碼和回應內容？
+        2.  **檢查測試斷言**：確認測試案例中的預期結果 (`assert response.status_code == ...` 和 `assert response.json() == ...`) 是否寫錯了。有時候是 API 的行為正確，但測試的預期是錯誤的。
+
+3.  **反覆測試**：每修復一個問題，就重新執行一次 `pytest`，確保修復沒有引入新的問題，並逐步減少失敗的測試數量。
+
+#### 第二階段：處理 `warnings`
+
+當所有測試都 `PASSED` 後，開始處理警告。
+
+1.  **識別警告來源**：仔細閱讀警告訊息，它會指出是哪個檔案、哪一行程式碼、以及是什麼原因（例如使用了被棄用的函式或參數）。
+2.  **修復專案內的警告**：
+    *   **SQLAlchemy `declarative_base`**：將 `from sqlalchemy.ext.declarative import declarative_base` 改為 `from sqlalchemy.orm import declarative_base`。
+    *   **Pydantic `regex`**：在 `Query` 或 `Field` 中，將 `regex=` 參數改為 `pattern=`。
+    *   **Pydantic `.dict()`**：將 Pydantic 模型的 `.dict()` 方法改為 `.model_dump()`。
+3.  **忽略第三方套件的警告**：如果警告來源於 `.venv/lib/site-packages/` 下的檔案，這表示它是第三方套件內部的問題。我們無法也不應該修改它，可以安全地忽略，等待套件作者在未來版本中修復。
+
+### 4. 最終驗證
+
+當 `pytest` 的最終結果顯示 **`... passed ...`** 且沒有任何可以由我們修復的警告時，代表測試流程已完成，程式碼已達到可交付狀態。

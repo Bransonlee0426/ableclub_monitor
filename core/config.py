@@ -1,7 +1,7 @@
 # /core/config.py
 
 from pydantic_settings import BaseSettings
-from pydantic import Field
+from pydantic import Field, ConfigDict
 
 class Settings(BaseSettings):
     """
@@ -20,9 +20,20 @@ class Settings(BaseSettings):
     TELEGRAM_BOT_TOKEN: str = Field(default="", description="Telegram Bot Token")
     TELEGRAM_CHAT_ID: str = Field(default="", description="Telegram Chat ID")
 
-    class Config:
+    # --- JWT (Authentication) Settings ---
+    # A strong, secret key for signing the JWT.
+    # In production, this should be loaded from the environment and be a long, random string.
+    SECRET_KEY: str = Field(default="a_very_secret_key_that_should_be_changed", description="Secret key for signing JWTs")
+    # The algorithm to use for JWT signing.
+    ALGORITHM: str = "HS256"
+    # The expiration time for access tokens in minutes.
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+
+
+    model_config = ConfigDict(
         # The name of the file to load environment variables from.
-        env_file = ".env"
+        env_file=".env"
+    )
 
 # Create a single, reusable instance of the settings.
 settings = Settings()

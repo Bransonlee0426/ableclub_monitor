@@ -12,8 +12,12 @@ selenium
 playwright
 
 # Settings management and data validation
-pydantic
+pydantic[email]
 python-dotenv
+
+# Security and Authentication
+passlib[bcrypt]
+python-jose[cryptography]
 
 # Testing
 pytest

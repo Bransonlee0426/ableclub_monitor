@@ -11,3 +11,15 @@ engine = create_engine(
 
 # Create a configured "Session" class
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Dependency to get a DB session
+def get_db():
+    """
+    FastAPI dependency that provides a SQLAlchemy database session.
+    It ensures that the database session is always closed after the request.
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 import datetime
 
 # SQLAlchemy model base class
@@ -14,9 +14,10 @@ class EventBase(BaseModel):
     title: str | None = None
     url: str | None = None
 
-    class Config:
+    model_config = ConfigDict(
         # Allows the model to be created from ORM objects
-        orm_mode = True
+        from_attributes=True
+    )
 
 # --- SQLAlchemy Model (for database interaction) ---
 class Event(Base):
