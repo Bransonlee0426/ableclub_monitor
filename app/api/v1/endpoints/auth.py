@@ -13,7 +13,6 @@ router = APIRouter()
 @router.post(
     "/login-or-register", 
     response_model=ResponseModel,
-    tags=["Authentication"],
     summary="使用者登入或註冊",
     description="此端點整合了使用者登入和註冊功能。系統會自動偵測使用者是否存在，並執行相應的操作。",
     responses={

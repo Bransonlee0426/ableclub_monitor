@@ -8,7 +8,6 @@ router = APIRouter()
 
 @router.get(
     "/check-status",
-    tags=["Users"],
     summary="檢查使用者註冊狀態",
     description="根據使用者名稱 (Email) 查詢該使用者是否已註冊且帳號為啟用狀態。",
     responses={
