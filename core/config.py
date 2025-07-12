@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     # The algorithm to use for JWT signing.
     ALGORITHM: str = "HS256"
     # The expiration time for access tokens in minutes.
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 43200  # 30 days (30 * 24 * 60)
 
 
     model_config = ConfigDict(
