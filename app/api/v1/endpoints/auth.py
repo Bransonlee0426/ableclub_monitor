@@ -79,7 +79,7 @@ async def login_or_register(
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="密碼錯誤、請重新確認。")
 
         # Generate access token for the existing user.
-        access_token = security.create_access_token(data={"sub": user.username})
+        access_token = security.create_access_token(subject=user.username)
         return ResponseModel(
             success=True, 
             message="登入成功", 
@@ -96,12 +96,17 @@ async def login_or_register(
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="邀請碼無效。")
 
         # Create a new user.
-        new_user = crud_user.create_user(db=db, username=request.username, password=request.password)
+        new_user = crud_user.create_user(
+            db=db, 
+            username=request.username, 
+            password=request.password,
+            invite_code=request.inviteCode
+        )
         
         # Note: In a real application, you would deactivate or decrement the invitation code here.
 
         # Generate access token for the new user.
-        access_token = security.create_access_token(data={"sub": new_user.username})
+        access_token = security.create_access_token(subject=new_user.username)
         
         # Return a 201 Created response for successful registration.
         return JSONResponse(
