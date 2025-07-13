@@ -6,7 +6,7 @@ to provide authentication, authorization, and other cross-cutting concerns.
 """
 
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 from core.security import verify_and_decode_token
@@ -15,13 +15,13 @@ from models.user import User
 from database.session import get_db
 
 
-# OAuth2 scheme for extracting Bearer tokens from Authorization header
+# HTTPBearer scheme for extracting Bearer tokens from Authorization header
 # This will automatically look for "Authorization: Bearer <token>" in requests
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login-or-register")
+security = HTTPBearer()
 
 
 async def get_current_active_user(
-    token: str = Depends(oauth2_scheme),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
 ) -> User:
     """
@@ -34,7 +34,7 @@ async def get_current_active_user(
     4. Validates that the user exists and is active
     
     Args:
-        token: JWT token extracted from Authorization header
+        credentials: HTTP Authorization credentials containing the Bearer token
         db: Database session
         
     Returns:
@@ -46,11 +46,12 @@ async def get_current_active_user(
             - 401 if user not found
             - 400 if user account is deactivated
     """
-    # Verify token and extract user_id
-    user_id = verify_and_decode_token(token)
+    # Extract token from credentials and verify
+    token = credentials.credentials
+    username = verify_and_decode_token(token)
     
     # Get user from database
-    user = crud_user.get_user_by_id(db, user_id=user_id)
+    user = crud_user.get_user_by_username(db, username=username)
     
     # Check if user exists
     if user is None:

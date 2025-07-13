@@ -36,15 +36,15 @@ def create_access_token(subject: Union[str, Any], expires_delta: timedelta = Non
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
-def verify_and_decode_token(token: str) -> int:
+def verify_and_decode_token(token: str) -> str:
     """
-    Verifies and decodes a JWT token, returning the user_id.
+    Verifies and decodes a JWT token, returning the username (email).
     
     Args:
         token: The JWT token string to verify and decode
         
     Returns:
-        int: The user_id extracted from the token's 'sub' field
+        str: The username (email) extracted from the token's 'sub' field
         
     Raises:
         HTTPException: If the token is invalid, expired, or missing required fields
@@ -53,23 +53,15 @@ def verify_and_decode_token(token: str) -> int:
         # Decode and verify the token
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         
-        # Extract the 'sub' field (user identifier)
-        user_id_str: str = payload.get("sub")
-        if user_id_str is None:
+        # Extract the 'sub' field (username/email)
+        username: str = payload.get("sub")
+        if username is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="憑證無效或已過期"
             )
         
-        # Convert to integer and return
-        try:
-            user_id = int(user_id_str)
-            return user_id
-        except ValueError:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="憑證無效或已過期"
-            )
+        return username
             
     except JWTError:
         # This catches all JWT-related errors: expired, invalid signature, etc.

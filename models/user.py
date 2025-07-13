@@ -17,5 +17,5 @@ class User(Base):
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
 
-    # Relationship to NotifySetting model
-    notify_settings = relationship("NotifySetting", back_populates="user")
+    # Relationship to NotifySetting model (commented out to avoid circular import)
+    # notify_settings = relationship("NotifySetting", back_populates="user")
