@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, users, notifications, admin
+from app.api.v1.endpoints import auth, users, notifications, admin, notify_settings
 
 # Create a main router for the v1 API
 api_router = APIRouter()
@@ -20,3 +20,7 @@ api_router.include_router(notifications.router, prefix="/notifications", tags=["
 # Include the admin router
 # All routes from admin.py will be prefixed with /admin
 api_router.include_router(admin.router, prefix="/admin", tags=["Admin"])
+
+# Include the notify settings router
+# All routes from notify_settings.py will be prefixed with /me/notify-settings
+api_router.include_router(notify_settings.router, prefix="/me/notify-settings", tags=["Notify Settings"])
