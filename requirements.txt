@@ -4,6 +4,7 @@ uvicorn[standard]
 
 # Database
 sqlalchemy
+psycopg2-binary
 
 # HTTP requests and web scraping
 requests
@@ -13,6 +14,7 @@ playwright
 
 # Settings management and data validation
 pydantic[email]
+pydantic-settings
 python-dotenv
 
 # Security and Authentication

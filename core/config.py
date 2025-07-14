@@ -32,7 +32,8 @@ class Settings(BaseSettings):
 
     model_config = ConfigDict(
         # The name of the file to load environment variables from.
-        env_file=".env"
+        env_file=".env",
+        env_file_encoding="utf-8"
     )
 
 # Create a single, reusable instance of the settings.

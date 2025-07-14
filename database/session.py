@@ -3,10 +3,17 @@ from sqlalchemy.orm import sessionmaker
 from core.config import settings
 
 # Create the SQLAlchemy engine
-# The connect_args are specific to SQLite to allow multi-threaded access.
+# Configure connection arguments based on database type
+if settings.DATABASE_URL.startswith("sqlite"):
+    # SQLite specific configuration for multi-threaded access
+    connect_args = {"check_same_thread": False}
+else:
+    # PostgreSQL and other databases don't need special connect_args
+    connect_args = {}
+
 engine = create_engine(
     settings.DATABASE_URL, 
-    connect_args={"check_same_thread": False}
+    connect_args=connect_args
 )
 
 # Create a configured "Session" class
