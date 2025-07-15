@@ -35,7 +35,7 @@ jobs:
       run: |
         # Install flake8 if not in requirements.txt
         pip install flake8
-        # Run flake8 code quality check
+        # Run flake8 code quality check (uses .flake8 config file)
         flake8 .
     
     # Step 5: Authenticate to Google Cloud Platform
