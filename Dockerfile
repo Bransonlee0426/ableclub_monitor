@@ -13,6 +13,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application's code to the working directory
 COPY . .
 
+# Expose port (Cloud Run uses PORT environment variable)
+EXPOSE 8080
+
 # Command to run the application
 # Uvicorn is a lightning-fast ASGI server, recommended for FastAPI
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Remove --reload for production deployment
+# Use PORT environment variable for Cloud Run compatibility
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
