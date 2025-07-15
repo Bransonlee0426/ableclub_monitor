@@ -3,14 +3,32 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from app.api.v1.api import api_router
 from schemas.auth import ResponseModel
+from core.config import settings
 
-# Create FastAPI app instance
+# Define server configurations for different environments
+servers = [
+    {
+        "url": "http://127.0.0.1:8000",
+        "description": "🔧 Local Development Server"
+    },
+    {
+        "url": "https://ableclub-monitor-dev-205163530380.asia-east1.run.app",
+        "description": "🚧 Development Environment (GCP Cloud Run)"
+    },
+    {
+        "url": "https://ableclub-monitor-205163530380.asia-east1.run.app",
+        "description": "🌐 Production Environment (GCP Cloud Run)"
+    }
+]
+
+# Create FastAPI app instance with multiple server configurations
 app = FastAPI(
     title="AbleClub Monitor API",
     description="API for monitoring and sending notifications for AbleClub courses.",
     version="1.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    servers=servers
 )
 
 @app.exception_handler(RequestValidationError)
@@ -45,6 +63,45 @@ def read_root():
     Root endpoint to check API status.
     """
     return {"status": "ok", "message": "Welcome to the AbleClub Monitor API!"}
+
+# Database initialization
+from database.init import init_database, get_database_info
+
+@app.on_event("startup")
+async def startup_event():
+    """
+    Initialize database on application startup
+    """
+    try:
+        init_database()
+    except Exception as e:
+        print(f"Database initialization failed: {e}")
+        # Don't fail the startup, just log the error
+
+@app.get("/api/v1/system/database-info", 
+         tags=["System"], 
+         summary="取得資料庫資訊",
+         description="檢查資料庫狀態和表格存在情況")
+def database_info():
+    """
+    Get database information and table status
+    """
+    return get_database_info()
+
+@app.post("/api/v1/system/init-database", 
+          tags=["System"], 
+          summary="初始化資料庫",
+          description="手動初始化資料庫表格")
+def manual_database_init():
+    """
+    Manually initialize database tables
+    """
+    from database.init import init_database
+    success = init_database()
+    return {
+        "success": success,
+        "message": "資料庫初始化完成" if success else "資料庫初始化失敗"
+    }
 
 # Include the main API router
 # All routes from app/api/v1/api.py will be included under the /api/v1 prefix
