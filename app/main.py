@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.api import api_router
 from schemas.auth import ResponseModel
 from core.config import settings
@@ -30,6 +31,24 @@ app = FastAPI(
     redoc_url="/redoc",
     servers=servers
 )
+
+# Configure CORS settings based on environment
+if getattr(settings, 'ENABLE_CORS', False):
+    # Development environment: allow all origins for Swagger UI testing
+    allowed_origins = ["*"] if settings.LOG_LEVEL == "DEBUG" else [
+        "https://ableclub-monitor-205163530380.asia-east1.run.app",  # Production
+        "https://ableclub-monitor-dev-205163530380.asia-east1.run.app",  # Development
+        "http://127.0.0.1:8000",  # Local development
+        "http://localhost:8000",  # Alternative local
+    ]
+    
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=allowed_origins,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        allow_headers=["*"],
+    )
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):

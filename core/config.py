@@ -28,6 +28,10 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     # The expiration time for access tokens in minutes.
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 43200  # 30 days (30 * 24 * 60)
+    
+    # --- CORS and Environment Settings ---
+    ENABLE_CORS: bool = Field(default=False, description="Enable CORS middleware")
+    LOG_LEVEL: str = Field(default="INFO", description="Application log level")
 
 
     model_config = ConfigDict(
