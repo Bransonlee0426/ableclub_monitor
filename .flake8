@@ -8,4 +8,5 @@ exclude =
     venv,
     .env,
     migrations,
-    __init__.py
+    __init__.py,
+    tests
