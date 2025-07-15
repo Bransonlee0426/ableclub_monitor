@@ -293,7 +293,10 @@ async def test_get_users_empty_list_should_return_200(async_client: AsyncClient,
     Test retrieval of empty users list should return valid structure.
     """
     # Arrange: Mock empty response
-    mocker.patch("app.api.v1.endpoints.admin.crud_user.get_users", return_value=([], 0))
+    mocker.patch(
+        "app.api.v1.endpoints.admin.crud_user.get_users",
+        return_value=([], 0)
+    )
 
     # Act: Send the request
     response = await async_client.get("/api/v1/admin/users")
@@ -307,12 +310,17 @@ async def test_get_users_empty_list_should_return_200(async_client: AsyncClient,
 
 
 @pytest.mark.asyncio
-async def test_get_users_invalid_page_should_handle_gracefully(async_client: AsyncClient, mocker):
+async def test_get_users_invalid_page_should_handle_gracefully(
+    async_client: AsyncClient, mocker
+):
     """
     Test handling of invalid pagination parameters.
     """
     # Arrange: Mock empty response for invalid page
-    mocker.patch("app.api.v1.endpoints.admin.crud_user.get_users", return_value=([], 0))
+    mocker.patch(
+        "app.api.v1.endpoints.admin.crud_user.get_users",
+        return_value=([], 0)
+    )
 
     # Act: Send request with invalid page
     response = await async_client.get("/api/v1/admin/users?page=0")
