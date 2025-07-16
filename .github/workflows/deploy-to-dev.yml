@@ -49,5 +49,5 @@ jobs:
       run: |
         # Make deploy script executable
         chmod +x ./deploy/deploy-dev.sh
-        # Execute development deployment script
-        ./deploy/deploy-dev.sh
+        # Change to deploy directory and execute development deployment script
+        cd deploy && ./deploy-dev.sh

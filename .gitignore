@@ -103,6 +103,10 @@ ENV/
 env.bak/
 venv.bak/
 
+# But keep deployment environment config files
+!deploy/env/
+!deploy/env/*.env
+
 # Spyder project settings
 .spyderproject
 .spyderworkspace
@@ -120,4 +124,18 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-deploy.sh
+
+# Project specific
+*.db
+*.sqlite
+*.sqlite3
+server.log
+scraper_debug.log
+logs/
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
