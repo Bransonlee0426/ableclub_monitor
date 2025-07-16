@@ -39,6 +39,14 @@ confirm_production_deploy() {
     echo "2. 程式碼已經過審查"
     echo "3. 資料庫備份已完成"
     echo ""
+    
+    # 檢查是否在 CI/CD 環境中（GitHub Actions）
+    if [ "$CI" = "true" ] || [ -n "$GITHUB_ACTIONS" ]; then
+        echo "🤖 在 CI/CD 環境中執行，自動確認部署"
+        return 0
+    fi
+    
+    # 在本地環境中要求用戶確認
     read -p "確定要繼續生產環境部署嗎？(y/N): " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -204,7 +212,11 @@ deploy_to_cloud_run() {
 # 清理函數
 cleanup() {
     echo "清理暫存檔案..."
-    docker system prune -f 2>/dev/null || true
+    # 關閉 set -e 避免清理階段的錯誤中斷腳本
+    set +e
+    docker system prune -f 2>/dev/null
+    # 確保清理函數總是成功退出
+    exit 0
 }
 
 # 主要執行流程
