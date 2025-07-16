@@ -219,3 +219,11 @@ class ResourceConflictException(BusinessLogicException):
     """
     def __init__(self, message: str = "資源衝突"):
         super().__init__(message, ErrorCodes.RESOURCE_CONFLICT, 409)
+
+
+class ExternalServiceException(BusinessLogicException):
+    """
+    Custom exception for external service errors
+    """
+    def __init__(self, message: str = "外部服務錯誤"):
+        super().__init__(message, ErrorCodes.EXTERNAL_SERVICE_ERROR, 500)
