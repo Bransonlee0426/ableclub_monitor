@@ -215,7 +215,10 @@ async def test_chk_001_check_status_for_registered_user_should_return_true(async
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == {"isRegistered": True}
+    response_data = response.json()
+    assert response_data["success"] == True
+    assert response_data["message"] == "查詢成功"
+    assert response_data["data"]["isRegistered"] == True
 
 
 @pytest.mark.asyncio
@@ -235,7 +238,10 @@ async def test_chk_002_003_check_status_for_unregistered_or_inactive_user_should
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == {"isRegistered": False}
+    response_data = response.json()
+    assert response_data["success"] == True
+    assert response_data["message"] == "查詢成功"
+    assert response_data["data"]["isRegistered"] == False
 
 
 @pytest.mark.asyncio
@@ -248,4 +254,7 @@ async def test_chk_004_check_status_without_username_should_fail(async_client: A
 
     # Assert: The custom validation handler should return a 400 Bad Request.
     assert response.status_code == 400
-    assert response.json() == {"success": False, "message": "帳號錯誤、請重新確認。"}
+    response_data = response.json()
+    assert response_data["success"] == False
+    assert response_data["message"] == "帳號錯誤、請重新確認。"
+    assert response_data["error_code"] == "VALIDATION_ERROR"

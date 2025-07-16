@@ -54,7 +54,10 @@ async def test_get_users_success_should_return_200(async_client: AsyncClient, mo
 
     # Assert: Verify the response
     assert response.status_code == 200
-    data = response.json()
+    response_data = response.json()
+    assert response_data["success"] == True
+    assert response_data["message"] == "查詢成功"
+    data = response_data["data"]
     assert len(data["items"]) == 2
     assert data["total"] == 2
     assert data["page"] == 1
