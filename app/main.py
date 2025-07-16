@@ -50,22 +50,48 @@ if getattr(settings, 'ENABLE_CORS', False):
         allow_headers=["*"],
     )
 
+# Import unified error handler
+from core.unified_error_handler import UnifiedErrorHandler, BusinessLogicException
+from sqlalchemy.exc import SQLAlchemyError
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     """
-    Enhanced validation exception handler with detailed error mapping.
-    This handler intercepts FastAPI's default 422 Unprocessable Entity response
-    and returns a custom 400 Bad Request response with precise error messages.
+    Unified validation exception handler
     """
-    from core.error_handler import create_validation_error_response
-    
-    # Create standardized error response
-    error_response = create_validation_error_response(exc)
-    
-    return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        content=error_response.model_dump(exclude_none=True),
+    return await UnifiedErrorHandler.validation_exception_handler(request, exc)
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """
+    Unified HTTP exception handler
+    """
+    return await UnifiedErrorHandler.http_exception_handler(request, exc)
+
+@app.exception_handler(BusinessLogicException)
+async def business_logic_exception_handler(request: Request, exc: BusinessLogicException):
+    """
+    Handle custom business logic exceptions
+    """
+    return UnifiedErrorHandler.create_error_response(
+        message=exc.message,
+        error_code=exc.error_code,
+        status_code=exc.status_code
     )
+
+@app.exception_handler(SQLAlchemyError)
+async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
+    """
+    Handle database errors
+    """
+    return await UnifiedErrorHandler.sqlalchemy_exception_handler(request, exc)
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    """
+    Handle unexpected exceptions
+    """
+    return await UnifiedErrorHandler.general_exception_handler(request, exc)
 
 @app.get("/", 
          tags=["Root"], 
