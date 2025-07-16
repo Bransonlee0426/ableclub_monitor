@@ -1,8 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, status, Response
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from schemas.auth import LoginOrRegisterRequest, ResponseModel, Token
+from schemas.auth import LoginOrRegisterRequest, Token
+from schemas.response import SuccessResponse, AuthResponse, TokenResponse, ErrorCodes
+from core.unified_error_handler import (
+    AuthenticationException, 
+    BusinessLogicException, 
+    ResourceNotFoundException
+)
 from crud import user as crud_user
 from crud import invitation_code as crud_invitation_code
 from core import security
@@ -12,7 +18,7 @@ router = APIRouter()
 
 @router.post(
     "/login-or-register", 
-    response_model=ResponseModel,
+    response_model=SuccessResponse[TokenResponse],
     summary="使用者登入或註冊",
     description="此端點整合了使用者登入和註冊功能。系統會自動偵測使用者是否存在，並執行相應的操作。",
     responses={
@@ -20,7 +26,11 @@ router = APIRouter()
             "description": "使用者成功登入",
             "content": {
                 "application/json": {
-                    "example": {"success": True, "message": "登入成功", "token": {"access_token": "jwt.token.here", "token_type": "bearer"}}
+                    "example": {
+                        "success": True, 
+                        "message": "登入成功", 
+                        "data": {"access_token": "jwt.token.here", "token_type": "bearer"}
+                    }
                 }
             }
         },
@@ -28,7 +38,11 @@ router = APIRouter()
             "description": "新使用者成功註冊",
             "content": {
                 "application/json": {
-                    "example": {"success": True, "message": "註冊成功", "token": {"access_token": "jwt.token.here", "token_type": "bearer"}}
+                    "example": {
+                        "success": True, 
+                        "message": "註冊成功", 
+                        "data": {"access_token": "jwt.token.here", "token_type": "bearer"}
+                    }
                 }
             }
         },
@@ -36,7 +50,11 @@ router = APIRouter()
             "description": "邀請碼無效",
             "content": {
                 "application/json": {
-                    "example": {"detail": "邀請碼無效。"}
+                    "example": {
+                        "success": False, 
+                        "message": "邀請碼無效。", 
+                        "error_code": "INVALID_INVITATION_CODE"
+                    }
                 }
             }
         },
@@ -44,7 +62,11 @@ router = APIRouter()
             "description": "驗證失敗 (密碼錯誤或帳號停用)",
             "content": {
                 "application/json": {
-                    "example": {"detail": "密碼錯誤、請重新確認。"}
+                    "example": {
+                        "success": False, 
+                        "message": "密碼錯誤、請重新確認。", 
+                        "error_code": "INVALID_CREDENTIALS"
+                    }
                 }
             }
         },
@@ -52,7 +74,11 @@ router = APIRouter()
             "description": "新使用者缺少邀請碼",
             "content": {
                 "application/json": {
-                    "example": {"detail": "您尚未註冊，請輸入邀請碼"}
+                    "example": {
+                        "success": False, 
+                        "message": "您尚未註冊，請輸入邀請碼", 
+                        "error_code": "REGISTRATION_REQUIRED"
+                    }
                 }
             }
         }
@@ -73,27 +99,24 @@ async def login_or_register(
     if user:
         if not user.is_active:
             # To prevent leaking user status, return the same error as a wrong password.
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="密碼錯誤、請重新確認。")
+            raise AuthenticationException("密碼錯誤、請重新確認。")
 
         if not security.verify_password(request.password, user.password_hash):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="密碼錯誤、請重新確認。")
+            raise AuthenticationException("密碼錯誤、請重新確認。")
 
         # Generate access token for the existing user.
         access_token = security.create_access_token(subject=user.username)
-        return ResponseModel(
-            success=True, 
-            message="登入成功", 
-            token=Token(access_token=access_token, token_type="bearer")
-        )
+        token_data = TokenResponse(access_token=access_token, token_type="bearer")
+        return SuccessResponse(data=token_data, message="登入成功")
 
     # --- Registration Path ---
     else:
         if not request.inviteCode:
-            raise HTTPException(status_code=402, detail="您尚未註冊，請輸入邀請碼")
+            raise BusinessLogicException("您尚未註冊，請輸入邀請碼", ErrorCodes.REGISTRATION_REQUIRED, 402)
 
         invitation_code = crud_invitation_code.get_valid_code(db, code=request.inviteCode)
         if not invitation_code or not invitation_code.is_active:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="邀請碼無效。")
+            raise BusinessLogicException("邀請碼無效。", ErrorCodes.INVALID_INVITATION_CODE, 400)
 
         # Create a new user.
         new_user = crud_user.create_user(
@@ -107,13 +130,11 @@ async def login_or_register(
 
         # Generate access token for the new user.
         access_token = security.create_access_token(subject=new_user.username)
+        token_data = TokenResponse(access_token=access_token, token_type="bearer")
         
         # Return a 201 Created response for successful registration.
+        response_data = SuccessResponse(data=token_data, message="註冊成功")
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
-            content=ResponseModel(
-                success=True, 
-                message="註冊成功", 
-                token=Token(access_token=access_token, token_type="bearer")
-            ).model_dump(exclude_none=True)
+            content=response_data.model_dump(exclude_none=True)
         )
