@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
 class LoginOrRegisterRequest(BaseModel):
     """
@@ -25,7 +25,10 @@ class Token(BaseModel):
 class ResponseModel(BaseModel):
     """
     A generic response model to standardize API responses.
+    Enhanced to support detailed error information in development environment.
     """
     success: bool
     message: str
     token: Optional[Token] = None
+    errors: Optional[List[Dict[str, Any]]] = None  # Detailed error info for debugging
+    error_code: Optional[str] = None  # Error code for frontend handling

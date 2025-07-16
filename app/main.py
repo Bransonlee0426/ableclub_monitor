@@ -53,24 +53,18 @@ if getattr(settings, 'ENABLE_CORS', False):
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     """
-    Custom exception handler for Pydantic validation errors.
+    Enhanced validation exception handler with detailed error mapping.
     This handler intercepts FastAPI's default 422 Unprocessable Entity response
-    and returns a custom 400 Bad Request response in our standard format.
+    and returns a custom 400 Bad Request response with precise error messages.
     """
-    # Here, we can customize the error message based on the validation error details.
-    # For now, we'll use a generic message that matches the test cases.
-    error_messages = {
-        "username": "帳號錯誤、請重新確認。",
-        "password": "密碼錯誤、請重新確認。",
-    }
+    from core.error_handler import create_validation_error_response
     
-    # Find the first field with an error to determine the message
-    error_field = exc.errors()[0]['loc'][-1]
-    message = error_messages.get(error_field, "參數驗證失敗")
-
+    # Create standardized error response
+    error_response = create_validation_error_response(exc)
+    
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
-        content=ResponseModel(success=False, message=message).model_dump(exclude_none=True),
+        content=error_response.model_dump(exclude_none=True),
     )
 
 @app.get("/", 
