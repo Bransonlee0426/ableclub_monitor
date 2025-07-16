@@ -17,9 +17,9 @@ def generate_debug_token(username: str = "bransonlee0426@gmail.com", days: int =
     print(f"⏰ Expires in: {days} days")
     print(f"🎫 Token:")
     print(token)
-    print(f"\n📋 Copy this for Swagger Authorization:")
+    print("\n📋 Copy this for Swagger Authorization:")
     print(f"Bearer {token}")
-    print(f"\n🔗 Or use in curl:")
+    print("\n🔗 Or use in curl:")
     print(f"curl -H 'Authorization: Bearer {token}' http://127.0.0.1:8000/api/v1/me/notify-settings/")
     
     return token
