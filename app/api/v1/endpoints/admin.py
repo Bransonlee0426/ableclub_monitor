@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.orm import Session
 import math
+from typing import Dict, Any
 
 from schemas.invitation_code import (
     InvitationCodeCreate,
@@ -11,7 +12,7 @@ from schemas.user import (
     UserUpdate,
     UserPublic
 )
-from schemas.response import SuccessResponse, ListResponse, ErrorCodes, EmptyResponse
+from schemas.response import SuccessResponse, ListResponse, ErrorCodes, EmptyResponse, create_list_response
 from core.unified_error_handler import (
     ResourceNotFoundException,
     ResourceConflictException,
@@ -100,7 +101,7 @@ async def create_invitation_code(
 
 @router.get(
     "/invitation-codes",
-    response_model=ListResponse[InvitationCodeResponse],
+    response_model=SuccessResponse[Dict[str, Any]],
     summary="查詢邀請碼列表",
     description="取得所有邀請碼的列表，支援依啟用狀態篩選與分頁功能。",
     responses={
@@ -153,7 +154,7 @@ async def get_invitation_codes(
         size=size
     )
     
-    return ListResponse(items=invitation_codes, total=total, page=page, size=size)
+    return create_list_response(items=invitation_codes, total=total, page=page, size=size)
 
 
 @router.patch(
@@ -275,7 +276,7 @@ async def delete_invitation_code(
 
 @router.get(
     "/users",
-    response_model=ListResponse[UserPublic],
+    response_model=SuccessResponse[Dict[str, Any]],
     summary="查詢使用者列表",
     description="取得所有使用者的列表，支援依啟用狀態篩選與分頁功能。回應不包含密碼資訊。",
     responses={
@@ -328,7 +329,7 @@ async def get_users(
         size=size
     )
     
-    return ListResponse(items=users, total=total, page=page, size=size)
+    return create_list_response(items=users, total=total, page=page, size=size)
 
 
 @router.get(

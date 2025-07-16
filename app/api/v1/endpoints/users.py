@@ -63,7 +63,7 @@ def check_user_status(
     Check if a user is registered and active based on the username (email).
     """
     user = crud_user.get_user_by_username(db, username=username)
-    is_registered = user and user.is_active
+    is_registered = bool(user and user.is_active)
     return SuccessResponse(
         data={"isRegistered": is_registered},
         message="查詢成功"

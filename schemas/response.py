@@ -27,7 +27,7 @@ class SuccessResponse(BaseResponse[T]):
     message: str = Field("操作成功", description="成功訊息")
     
     def __init__(self, data: T = None, message: str = "操作成功", **kwargs):
-        super().__init__(success=True, message=message, data=data, **kwargs)
+        super().__init__(message=message, data=data, **kwargs)
 
 class ErrorResponse(BaseResponse[None]):
     """
@@ -37,7 +37,7 @@ class ErrorResponse(BaseResponse[None]):
     data: None = Field(None, description="錯誤回應無資料")
     
     def __init__(self, message: str, error_code: str = None, errors: List[Dict[str, Any]] = None, **kwargs):
-        super().__init__(success=False, message=message, data=None, error_code=error_code, errors=errors, **kwargs)
+        super().__init__(message=message, data=None, error_code=error_code, errors=errors, **kwargs)
 
 # Common response types
 class EmptyResponse(BaseResponse[None]):
@@ -53,18 +53,24 @@ class ListResponse(BaseModel, Generic[T]):
     success: bool = Field(True, description="操作是否成功")
     message: str = Field("查詢成功", description="回應訊息")
     data: Dict[str, Any] = Field(..., description="列表資料")
-    
-    def __init__(self, items: List[T], total: int, page: int = 1, size: int = 20, **kwargs):
-        import math
-        pages = math.ceil(total / size) if total > 0 else 1
-        data = {
-            "items": items,
-            "total": total,
-            "page": page,
-            "size": size,
-            "pages": pages
-        }
-        super().__init__(success=True, message="查詢成功", data=data, **kwargs)
+    error_code: Optional[str] = Field(None, description="錯誤代碼")
+    errors: Optional[List[Dict[str, Any]]] = Field(None, description="詳細錯誤資訊（僅開發環境）")
+    timestamp: Optional[str] = Field(None, description="回應時間戳")
+
+def create_list_response(items: List[T], total: int, page: int = 1, size: int = 20, **kwargs) -> SuccessResponse[Dict[str, Any]]:
+    """
+    Create a list response with pagination information
+    """
+    import math
+    pages = math.ceil(total / size) if total > 0 else 1
+    data = {
+        "items": items,
+        "total": total,
+        "page": page,
+        "size": size,
+        "pages": pages
+    }
+    return SuccessResponse(data=data, message="查詢成功", **kwargs)
 
 # Specific response models for different data types
 class TokenResponse(BaseModel):
