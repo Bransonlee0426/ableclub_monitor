@@ -13,7 +13,8 @@ else:
 
 engine = create_engine(
     settings.DATABASE_URL, 
-    connect_args=connect_args
+    connect_args=connect_args,
+    pool_pre_ping=True  # Enable connection health checks to handle stale connections
 )
 
 # Create a configured "Session" class
