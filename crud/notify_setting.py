@@ -182,3 +182,41 @@ def validate_final_state(notify_type: str, email_address: Optional[str]) -> bool
     if notify_type == "email":
         return email_address is not None and email_address.strip() != ""
     return True
+
+
+def get_settings_with_keywords_by_user_id(db: Session, user_id: int) -> Tuple[List[dict], int]:
+    """
+    Get all notification settings for a user with their keywords included.
+    
+    Args:
+        db: Database session
+        user_id: ID of the user
+        
+    Returns:
+        Tuple of (list of notification settings with keywords as dicts, total count)
+    """
+    from crud.keyword import get_by_user_id as get_keywords_by_user_id
+    
+    # Get user's notification settings
+    notify_settings, total = get_user_notify_settings(db, user_id)
+    
+    # Get user's keywords
+    keywords_objs = get_keywords_by_user_id(db, user_id)
+    keywords_list = [keyword.keyword for keyword in keywords_objs]
+    
+    # Convert notification settings to dicts and add keywords
+    settings_with_keywords = []
+    for setting in notify_settings:
+        setting_dict = {
+            "id": setting.id,
+            "user_id": setting.user_id,
+            "notify_type": setting.notify_type,
+            "email_address": setting.email_address,
+            "is_active": setting.is_active,
+            "created_at": setting.created_at,
+            "updated_at": setting.updated_at,
+            "keywords": keywords_list
+        }
+        settings_with_keywords.append(setting_dict)
+    
+    return settings_with_keywords, total

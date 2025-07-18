@@ -1,10 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime
-from sqlalchemy.ext.declarative import declarative_base
 from pydantic import BaseModel, ConfigDict
 import datetime
-
-# SQLAlchemy model base class
-Base = declarative_base()
+from database.session import Base
 
 # --- Pydantic Models (for API data validation) ---
 class EventBase(BaseModel):

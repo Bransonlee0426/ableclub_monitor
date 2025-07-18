@@ -165,16 +165,17 @@ async def get_user_notify_settings(
     db: Session = Depends(get_db)
 ):
     """
-    Get all notification settings for the current user.
+    Get all notification settings for the current user with keywords included.
     
-    Returns a list of all notification settings ordered by creation date (newest first).
+    Returns a list of all notification settings ordered by creation date (newest first),
+    with each setting including the user's keywords list.
     """
-    notify_settings, total = crud_notify_setting.get_user_notify_settings(
+    notify_settings_with_keywords, total = crud_notify_setting.get_settings_with_keywords_by_user_id(
         db, current_user.id
     )
     
     list_response = NotifySettingListResponse(
-        items=[NotifySettingResponse.model_validate(setting) for setting in notify_settings],
+        items=[NotifySettingResponse.model_validate(setting) for setting in notify_settings_with_keywords],
         total=total
     )
     

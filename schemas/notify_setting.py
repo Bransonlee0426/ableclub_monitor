@@ -83,6 +83,7 @@ class NotifySettingResponse(BaseModel):
     is_active: bool = Field(..., description="是否啟用")
     created_at: datetime = Field(..., description="建立時間")
     updated_at: datetime = Field(..., description="更新時間")
+    keywords: List[str] = Field(default=[], description="使用者設定的關鍵字列表")
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -94,7 +95,8 @@ class NotifySettingResponse(BaseModel):
                 "email_address": "user@example.com",
                 "is_active": True,
                 "created_at": "2024-01-01T00:00:00",
-                "updated_at": "2024-01-01T00:00:00"
+                "updated_at": "2024-01-01T00:00:00",
+                "keywords": ["Python", "FastAPI"]
             }
         }
     )
@@ -116,7 +118,8 @@ class NotifySettingListResponse(BaseModel):
                         "email_address": "user@example.com",
                         "is_active": True,
                         "created_at": "2024-01-01T00:00:00",
-                        "updated_at": "2024-01-01T00:00:00"
+                        "updated_at": "2024-01-01T00:00:00",
+                        "keywords": ["Python", "FastAPI"]
                     }
                 ],
                 "total": 1
