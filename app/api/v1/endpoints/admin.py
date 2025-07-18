@@ -154,7 +154,10 @@ async def get_invitation_codes(
         size=size
     )
     
-    return create_list_response(items=invitation_codes, total=total, page=page, size=size)
+    # Convert SQLAlchemy models to Pydantic models
+    code_data = [InvitationCodeResponse.model_validate(code) for code in invitation_codes]
+    
+    return create_list_response(items=code_data, total=total, page=page, size=size)
 
 
 @router.patch(
@@ -329,7 +332,10 @@ async def get_users(
         size=size
     )
     
-    return create_list_response(items=users, total=total, page=page, size=size)
+    # Convert SQLAlchemy models to Pydantic models
+    user_data = [UserPublic.model_validate(user) for user in users]
+    
+    return create_list_response(items=user_data, total=total, page=page, size=size)
 
 
 @router.get(

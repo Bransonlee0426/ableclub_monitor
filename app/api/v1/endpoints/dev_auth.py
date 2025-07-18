@@ -31,7 +31,7 @@ DEV_MODE = settings.SECRET_KEY == "a_very_secret_key_that_should_be_changed"
     tags=["🚧 Development Only"]
 )
 async def dev_quick_login(
-    username: str = "bransonlee0426@gmail.com",
+    username: str = "branson.chen@advantech.com",
     db: Session = Depends(get_db)
 ):
     """
@@ -76,7 +76,7 @@ async def get_dev_token():
     if not DEV_MODE:
         raise BusinessLogicException("此端點僅在開發環境可用", ErrorCodes.DEV_ENVIRONMENT_ONLY, 404)
     
-    username = "bransonlee0426@gmail.com"
+    username = "branson.chen@advantech.com"
     expires_delta = timedelta(days=30)
     token = create_access_token(subject=username, expires_delta=expires_delta)
     
