@@ -6,7 +6,7 @@ Handles automatic table creation and database setup
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.exc import SQLAlchemyError
 from core.config import settings
-from database.session import engine
+from database.session import engine, Base
 import logging
 
 # Import all models to ensure they are registered with SQLAlchemy
@@ -14,12 +14,7 @@ from models.user import User
 from models.event import Event  
 from models.invitation_code import InvitationCode
 from models.notify_setting import NotifySetting
-
-# Get all model metadata
-from models.user import Base as UserBase
-from models.event import Base as EventBase
-from models.invitation_code import Base as InvitationBase
-from models.notify_setting import Base as NotifyBase
+from models.keyword import Keyword
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -36,7 +31,7 @@ def check_tables_exist() -> dict:
         inspector = inspect(engine)
         existing_tables = inspector.get_table_names()
         
-        required_tables = ['users', 'events', 'invitation_codes', 'notify_settings']
+        required_tables = ['users', 'events', 'invitation_codes', 'notify_settings', 'keywords']
         table_status = {}
         
         for table in required_tables:
@@ -59,12 +54,7 @@ def create_tables():
         table_status = check_tables_exist()
         logger.info(f"Current table status: {table_status}")
         
-        # Create all tables from all models
-        # Using create_all with checkfirst=True (default) ensures existing tables are not affected
-        UserBase.metadata.create_all(bind=engine, checkfirst=True)
-        EventBase.metadata.create_all(bind=engine, checkfirst=True)  
-        InvitationBase.metadata.create_all(bind=engine, checkfirst=True)
-        NotifyBase.metadata.create_all(bind=engine, checkfirst=True)
+        Base.metadata.create_all(bind=engine, checkfirst=True)
         
         logger.info("Database tables creation completed successfully")
         

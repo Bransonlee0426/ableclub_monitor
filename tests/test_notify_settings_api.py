@@ -370,3 +370,111 @@ class TestDeleteNotifySetting:
         
         # Assert
         assert response.status_code == 401
+
+
+# --- Tests for Keywords Integration ---
+
+class TestNotifySettingsWithKeywords:
+    """Test cases for notification settings with keywords integration"""
+    
+    @pytest.mark.asyncio
+    async def test_get_notify_settings_should_include_keywords(self, async_client: AsyncClient, mocker):
+        """
+        Test NST-016: GET notify-settings should include user's keywords in each setting
+        """
+        # Arrange
+        mocker.patch("dependencies.crud_user.get_user_by_username", return_value=ACTIVE_USER_MOCK)
+        
+        # Mock notify settings with keywords
+        notify_settings_with_keywords = [
+            {
+                "id": 1,
+                "user_id": 1,
+                "notify_type": "email",
+                "email_address": "user@example.com",
+                "is_active": True,
+                "created_at": datetime(2024, 1, 1, 0, 0, 0),
+                "updated_at": datetime(2024, 1, 1, 0, 0, 0),
+                "keywords": ["Python", "FastAPI"]
+            },
+            {
+                "id": 2,
+                "user_id": 1,
+                "notify_type": "telegram",
+                "email_address": None,
+                "is_active": True,
+                "created_at": datetime(2024, 1, 1, 0, 0, 0),
+                "updated_at": datetime(2024, 1, 1, 0, 0, 0),
+                "keywords": ["Python", "FastAPI"]
+            }
+        ]
+        
+        mocker.patch("app.api.v1.endpoints.notify_settings.crud_notify_setting.get_settings_with_keywords_by_user_id", 
+                    return_value=(notify_settings_with_keywords, 2))
+        
+        # Act
+        response = await async_client.get("/api/v1/me/notify-settings/", headers=get_auth_headers())
+        
+        # Assert
+        assert response.status_code == 200
+        response_data = response.json()
+        assert response_data["success"] is True
+        
+        data = response_data["data"]
+        assert data["total"] == 2
+        assert len(data["items"]) == 2
+        
+        # Check first setting
+        first_setting = data["items"][0]
+        assert first_setting["notify_type"] == "email"
+        assert first_setting["email_address"] == "user@example.com"
+        assert "keywords" in first_setting
+        assert first_setting["keywords"] == ["Python", "FastAPI"]
+        
+        # Check second setting
+        second_setting = data["items"][1]
+        assert second_setting["notify_type"] == "telegram"
+        assert second_setting["email_address"] is None
+        assert "keywords" in second_setting
+        assert second_setting["keywords"] == ["Python", "FastAPI"]
+
+    @pytest.mark.asyncio
+    async def test_get_notify_settings_with_no_keywords_should_include_empty_keywords(self, async_client: AsyncClient, mocker):
+        """
+        Test NST-017: GET notify-settings should include empty keywords list for users with no keywords
+        """
+        # Arrange
+        mocker.patch("dependencies.crud_user.get_user_by_username", return_value=ACTIVE_USER_MOCK)
+        
+        # Mock notify settings with empty keywords
+        notify_settings_with_keywords = [
+            {
+                "id": 1,
+                "user_id": 1,
+                "notify_type": "email",
+                "email_address": "user@example.com",
+                "is_active": True,
+                "created_at": datetime(2024, 1, 1, 0, 0, 0),
+                "updated_at": datetime(2024, 1, 1, 0, 0, 0),
+                "keywords": []
+            }
+        ]
+        
+        mocker.patch("app.api.v1.endpoints.notify_settings.crud_notify_setting.get_settings_with_keywords_by_user_id", 
+                    return_value=(notify_settings_with_keywords, 1))
+        
+        # Act
+        response = await async_client.get("/api/v1/me/notify-settings/", headers=get_auth_headers())
+        
+        # Assert
+        assert response.status_code == 200
+        response_data = response.json()
+        assert response_data["success"] is True
+        
+        data = response_data["data"]
+        assert data["total"] == 1
+        assert len(data["items"]) == 1
+        
+        setting = data["items"][0]
+        assert "keywords" in setting
+        assert setting["keywords"] == []
