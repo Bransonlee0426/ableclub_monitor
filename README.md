@@ -256,19 +256,53 @@ curl -X POST "http://127.0.0.1:8000/api/v1/admin/invitation-codes" \
   -d '{"code": "NEWCODE", "expiry_days": 7}'
 ```
 
-### 通知設定 API
+### 通知設定 API（Singleton Resource 設計）
+
+這組 API 圍繞當前登入的使用者 (/me)，採納了「單例資源」設計模式。前端不需要關心 id，只需透過不同的 HTTP 方法操作 `/api/v1/me/notify-settings/` 這個唯一的路徑即可。
+
+| HTTP 方法 | 路徑 | 功能 | 狀態碼 |
+|-----------|------|------|--------|
+| `GET` | `/api/v1/me/notify-settings/` | 查詢當前使用者的通知設定 | 200 OK / 404 Not Found |
+| `POST` | `/api/v1/me/notify-settings/` | 建立當前使用者的通知設定 | 201 Created / 409 Conflict |
+| `PUT` | `/api/v1/me/notify-settings/` | 更新當前使用者的通知設定 | 200 OK / 404 Not Found |
+| `DELETE` | `/api/v1/me/notify-settings/` | 刪除當前使用者的通知設定 | 204 No Content / 404 Not Found |
 
 ```bash
-# 取得個人通知設定
-curl -X GET "http://127.0.0.1:8000/api/v1/me/notify-settings" \
+# 建立通知設定（初次設定）
+curl -X POST "http://127.0.0.1:8000/api/v1/me/notify-settings/" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "notify_type": "email",
+    "email_address": "user@example.com",
+    "keywords": ["Python", "FastAPI"]
+  }'
+
+# 查詢通知設定
+curl -X GET "http://127.0.0.1:8000/api/v1/me/notify-settings/" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 
 # 更新通知設定
-curl -X PUT "http://127.0.0.1:8000/api/v1/me/notify-settings" \
+curl -X PUT "http://127.0.0.1:8000/api/v1/me/notify-settings/" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"email_notifications": true, "telegram_notifications": false}'
+  -d '{
+    "notify_type": "telegram",
+    "email_address": null,
+    "keywords": ["React", "Vue"]
+  }'
+
+# 刪除通知設定
+curl -X DELETE "http://127.0.0.1:8000/api/v1/me/notify-settings/" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
+
+**通知設定 API 特色**：
+- 🔄 **Singleton Resource 模式**：每個使用者只能有一組通知設定
+- ⚡ **簡化的路徑設計**：無需處理複雜的 ID 參數
+- 🔗 **內建關鍵字整合**：設定中自動包含使用者的關鍵字列表
+- 🛡️ **完整的錯誤處理**：支援 404, 409, 400 等標準 HTTP 狀態碼
+- 📧 **條件式驗證**：Email 類型通知必須提供有效的 Email 地址
 
 ### 關鍵字管理 API
 
