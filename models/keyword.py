@@ -20,5 +20,5 @@ class Keyword(Base):
         UniqueConstraint('user_id', 'keyword', name='_user_keyword_uc'),
     )
 
-    # Relationship to User model (commented out to avoid circular import)
-    # user = relationship("User", back_populates="keywords") 
+    # Relationship to User model
+    user = relationship("User", back_populates="keywords") 

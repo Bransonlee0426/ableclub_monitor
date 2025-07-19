@@ -12,6 +12,7 @@ The tests follow Test-Driven Development (TDD) methodology and include:
 - Authorization tests (JWT token required)
 - Business logic tests (duplicate prevention, ownership verification)
 - Error handling tests
+- Keywords integration tests
 """
 import pytest
 from httpx import AsyncClient
@@ -74,20 +75,27 @@ class TestCreateNotifySetting:
         mocker.patch("dependencies.crud_user.get_user_by_id", return_value=ACTIVE_USER_MOCK)
         mocker.patch("app.api.v1.endpoints.notify_settings.crud_notify_setting.get_notify_setting_by_user_and_type", return_value=None)
         mocker.patch("app.api.v1.endpoints.notify_settings.crud_notify_setting.create_notify_setting", return_value=EMAIL_NOTIFY_SETTING_MOCK)
+        mocker.patch("app.api.v1.endpoints.notify_settings.get_by_user_id", return_value=[])
         
         # Act
         response = await async_client.post(
             "/api/v1/me/notify-settings/",
-            json={"notify_type": "email", "email_address": "user@example.com"},
+            json={
+                "notify_type": "email", 
+                "email_address": "user@example.com",
+                "keywords": ["keyword1", "keyword2"]
+            },
             headers=get_auth_headers()
         )
         
         # Assert
         assert response.status_code == 201
         data = response.json()
-        assert data["notify_type"] == "email"
-        assert data["email_address"] == "user@example.com"
-        assert data["is_active"] is True
+        assert data["data"]["notify_type"] == "email"
+        assert data["data"]["email_address"] == "user@example.com"
+        assert data["data"]["is_active"] is True
+        assert "keywords" in data["data"]
+        assert isinstance(data["data"]["keywords"], list)
 
     @pytest.mark.asyncio
     async def test_create_telegram_notify_setting_without_email_should_succeed(self, async_client: AsyncClient, mocker):
@@ -98,6 +106,7 @@ class TestCreateNotifySetting:
         mocker.patch("dependencies.crud_user.get_user_by_id", return_value=ACTIVE_USER_MOCK)
         mocker.patch("app.api.v1.endpoints.notify_settings.crud_notify_setting.get_notify_setting_by_user_and_type", return_value=None)
         mocker.patch("app.api.v1.endpoints.notify_settings.crud_notify_setting.create_notify_setting", return_value=TELEGRAM_NOTIFY_SETTING_MOCK)
+        mocker.patch("app.api.v1.endpoints.notify_settings.get_by_user_id", return_value=[])
         
         # Act
         response = await async_client.post(
@@ -109,8 +118,8 @@ class TestCreateNotifySetting:
         # Assert
         assert response.status_code == 201
         data = response.json()
-        assert data["notify_type"] == "telegram"
-        assert data["email_address"] is None
+        assert data["data"]["notify_type"] == "telegram"
+        assert data["data"]["email_address"] is None
 
     @pytest.mark.asyncio
     async def test_create_email_notify_setting_without_email_should_fail(self, async_client: AsyncClient, mocker):
@@ -267,6 +276,7 @@ class TestUpdateNotifySetting:
         mocker.patch("app.api.v1.endpoints.notify_settings.crud_notify_setting.get_notify_setting_by_id", return_value=EMAIL_NOTIFY_SETTING_MOCK)
         mocker.patch("app.api.v1.endpoints.notify_settings.crud_notify_setting.validate_final_state", return_value=True)
         mocker.patch("app.api.v1.endpoints.notify_settings.crud_notify_setting.update_notify_setting", return_value=updated_setting)
+        mocker.patch("app.api.v1.endpoints.notify_settings.get_by_user_id", return_value=[])
         
         # Act
         response = await async_client.patch(
@@ -278,7 +288,81 @@ class TestUpdateNotifySetting:
         # Assert
         assert response.status_code == 200
         data = response.json()
-        assert data["email_address"] == "newemail@example.com"
+        assert data["data"]["email_address"] == "newemail@example.com"
+
+    @pytest.mark.asyncio
+    async def test_update_notify_setting_with_keywords_replacement_should_succeed(self, async_client: AsyncClient, mocker):
+        """
+        Test NST-010B: Updating notification setting with keywords replacement should succeed
+        """
+        # Arrange: First create a setting with old keywords
+        updated_setting = MagicMock(**EMAIL_NOTIFY_SETTING_MOCK.__dict__)
+        updated_setting.email_address = "new@example.com"
+        
+        # Mock old keywords
+        old_keyword_mock = MagicMock()
+        old_keyword_mock.keyword = "old_keyword"
+        
+        # Mock new keywords after update
+        new_keyword_mocks = [
+            MagicMock(keyword="new1"),
+            MagicMock(keyword="new2")
+        ]
+        
+        mocker.patch("dependencies.crud_user.get_user_by_id", return_value=ACTIVE_USER_MOCK)
+        mocker.patch("app.api.v1.endpoints.notify_settings.crud_notify_setting.get_notify_setting_by_id", return_value=EMAIL_NOTIFY_SETTING_MOCK)
+        mocker.patch("app.api.v1.endpoints.notify_settings.crud_notify_setting.validate_final_state", return_value=True)
+        mocker.patch("app.api.v1.endpoints.notify_settings.crud_notify_setting.update_notify_setting", return_value=updated_setting)
+        mocker.patch("app.api.v1.endpoints.notify_settings.get_by_user_id", return_value=new_keyword_mocks)
+        
+        # Act: Send PUT request with keywords replacement
+        response = await async_client.patch(
+            "/api/v1/me/notify-settings/1",
+            json={
+                "email_address": "new@example.com",
+                "keywords": ["new1", "new2"]
+            },
+            headers=get_auth_headers()
+        )
+        
+        # Assert
+        assert response.status_code == 200
+        data = response.json()
+        assert data["data"]["email_address"] == "new@example.com"
+        assert "keywords" in data["data"]
+        assert data["data"]["keywords"] == ["new1", "new2"]
+
+    @pytest.mark.asyncio
+    async def test_update_notify_setting_clear_keywords_should_succeed(self, async_client: AsyncClient, mocker):
+        """
+        Test NST-010C: Updating notification setting to clear keywords should succeed
+        """
+        # Arrange: First create a setting with keywords
+        updated_setting = MagicMock(**EMAIL_NOTIFY_SETTING_MOCK.__dict__)
+        
+        # Mock existing keyword that should be deleted
+        existing_keyword_mock = MagicMock()
+        existing_keyword_mock.keyword = "keyword_to_delete"
+        
+        mocker.patch("dependencies.crud_user.get_user_by_id", return_value=ACTIVE_USER_MOCK)
+        mocker.patch("app.api.v1.endpoints.notify_settings.crud_notify_setting.get_notify_setting_by_id", return_value=EMAIL_NOTIFY_SETTING_MOCK)
+        mocker.patch("app.api.v1.endpoints.notify_settings.crud_notify_setting.validate_final_state", return_value=True)
+        mocker.patch("app.api.v1.endpoints.notify_settings.crud_notify_setting.update_notify_setting", return_value=updated_setting)
+        # Mock empty keywords list after clearing
+        mocker.patch("app.api.v1.endpoints.notify_settings.get_by_user_id", return_value=[])
+        
+        # Act: Send PUT request with empty keywords array
+        response = await async_client.patch(
+            "/api/v1/me/notify-settings/1",
+            json={"keywords": []},
+            headers=get_auth_headers()
+        )
+        
+        # Assert
+        assert response.status_code == 200
+        data = response.json()
+        assert "keywords" in data["data"]
+        assert data["data"]["keywords"] == []
 
     @pytest.mark.asyncio
     async def test_update_nonexistent_notify_setting_should_fail(self, async_client: AsyncClient, mocker):
@@ -332,7 +416,7 @@ class TestDeleteNotifySetting:
     @pytest.mark.asyncio
     async def test_delete_existing_notify_setting_should_succeed(self, async_client: AsyncClient, mocker):
         """
-        Test NST-013: Deleting existing notification setting should succeed with 204
+        Test NST-013: Deleting existing notification setting should succeed with 200
         """
         # Arrange
         mocker.patch("dependencies.crud_user.get_user_by_id", return_value=ACTIVE_USER_MOCK)
@@ -342,7 +426,7 @@ class TestDeleteNotifySetting:
         response = await async_client.delete("/api/v1/me/notify-settings/1", headers=get_auth_headers())
         
         # Assert
-        assert response.status_code == 204
+        assert response.status_code == 200
 
     @pytest.mark.asyncio
     async def test_delete_nonexistent_notify_setting_should_fail(self, async_client: AsyncClient, mocker):
@@ -478,3 +562,100 @@ class TestNotifySettingsWithKeywords:
         setting = data["items"][0]
         assert "keywords" in setting
         assert setting["keywords"] == []
+
+
+# --- New Tests for Keywords Functionality ---
+
+class TestKeywordsFunctionality:
+    """Test cases specifically for keywords functionality in notification settings"""
+    
+    @pytest.mark.asyncio
+    async def test_create_notify_setting_with_keywords_should_succeed(self, async_client: AsyncClient, mocker):
+        """
+        Test NST-018: Creating notification setting with keywords should succeed
+        """
+        # Arrange
+        keyword_mocks = [
+            MagicMock(keyword="keyword1"),
+            MagicMock(keyword="keyword2")
+        ]
+        
+        mocker.patch("dependencies.crud_user.get_user_by_id", return_value=ACTIVE_USER_MOCK)
+        mocker.patch("app.api.v1.endpoints.notify_settings.crud_notify_setting.get_notify_setting_by_user_and_type", return_value=None)
+        mocker.patch("app.api.v1.endpoints.notify_settings.crud_notify_setting.create_notify_setting", return_value=EMAIL_NOTIFY_SETTING_MOCK)
+        mocker.patch("app.api.v1.endpoints.notify_settings.get_by_user_id", return_value=keyword_mocks)
+        
+        # Act
+        response = await async_client.post(
+            "/api/v1/me/notify-settings/",
+            json={
+                "notify_type": "email",
+                "email_address": "user@example.com",
+                "keywords": ["keyword1", "keyword2"]
+            },
+            headers=get_auth_headers()
+        )
+        
+        # Assert
+        assert response.status_code == 201
+        data = response.json()
+        assert "keywords" in data["data"]
+        assert data["data"]["keywords"] == ["keyword1", "keyword2"]
+
+    @pytest.mark.asyncio
+    async def test_update_notify_setting_replace_keywords_should_succeed(self, async_client: AsyncClient, mocker):
+        """
+        Test NST-019: Updating notification setting to replace keywords should succeed
+        """
+        # Arrange
+        updated_setting = MagicMock(**EMAIL_NOTIFY_SETTING_MOCK.__dict__)
+        new_keyword_mocks = [
+            MagicMock(keyword="new1"),
+            MagicMock(keyword="new2")
+        ]
+        
+        mocker.patch("dependencies.crud_user.get_user_by_id", return_value=ACTIVE_USER_MOCK)
+        mocker.patch("app.api.v1.endpoints.notify_settings.crud_notify_setting.get_notify_setting_by_id", return_value=EMAIL_NOTIFY_SETTING_MOCK)
+        mocker.patch("app.api.v1.endpoints.notify_settings.crud_notify_setting.validate_final_state", return_value=True)
+        mocker.patch("app.api.v1.endpoints.notify_settings.crud_notify_setting.update_notify_setting", return_value=updated_setting)
+        mocker.patch("app.api.v1.endpoints.notify_settings.get_by_user_id", return_value=new_keyword_mocks)
+        
+        # Act
+        response = await async_client.patch(
+            "/api/v1/me/notify-settings/1",
+            json={"keywords": ["new1", "new2"]},
+            headers=get_auth_headers()
+        )
+        
+        # Assert
+        assert response.status_code == 200
+        data = response.json()
+        assert "keywords" in data["data"]
+        assert data["data"]["keywords"] == ["new1", "new2"]
+
+    @pytest.mark.asyncio
+    async def test_update_notify_setting_clear_keywords_with_empty_array_should_succeed(self, async_client: AsyncClient, mocker):
+        """
+        Test NST-020: Updating notification setting to clear all keywords with empty array should succeed
+        """
+        # Arrange
+        updated_setting = MagicMock(**EMAIL_NOTIFY_SETTING_MOCK.__dict__)
+        
+        mocker.patch("dependencies.crud_user.get_user_by_id", return_value=ACTIVE_USER_MOCK)
+        mocker.patch("app.api.v1.endpoints.notify_settings.crud_notify_setting.get_notify_setting_by_id", return_value=EMAIL_NOTIFY_SETTING_MOCK)
+        mocker.patch("app.api.v1.endpoints.notify_settings.crud_notify_setting.validate_final_state", return_value=True)
+        mocker.patch("app.api.v1.endpoints.notify_settings.crud_notify_setting.update_notify_setting", return_value=updated_setting)
+        mocker.patch("app.api.v1.endpoints.notify_settings.get_by_user_id", return_value=[])
+        
+        # Act
+        response = await async_client.patch(
+            "/api/v1/me/notify-settings/1",
+            json={"keywords": []},
+            headers=get_auth_headers()
+        )
+        
+        # Assert
+        assert response.status_code == 200
+        data = response.json()
+        assert "keywords" in data["data"]
+        assert data["data"]["keywords"] == []
