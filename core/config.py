@@ -33,6 +33,13 @@ class Settings(BaseSettings):
     ENABLE_CORS: bool = Field(default=False, description="Enable CORS middleware")
     LOG_LEVEL: str = Field(default="INFO", description="Application log level")
     ENVIRONMENT: str = Field(default="local", description="Application environment (local, dev, prod)")
+    
+    # --- Job Scheduler Settings ---
+    SCHEDULER_ENABLED: bool = Field(default=False, description="Enable job scheduler")
+    SCHEDULER_TIMEZONE: str = Field(default="Asia/Taipei", description="Scheduler timezone")
+    SCRAPER_JOB_INTERVAL_HOURS: int = Field(default=1, description="Scraper job interval in hours")
+    JOB_MAX_INSTANCES: int = Field(default=1, description="Maximum concurrent job instances")
+    JOB_RETRY_MAX: int = Field(default=3, description="Maximum number of job retries")
 
 
     model_config = ConfigDict(

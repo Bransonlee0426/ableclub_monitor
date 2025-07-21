@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, users, notifications, admin, notify_settings, dev_auth, keywords, scraper, scraped_events
+from app.api.v1.endpoints import auth, users, notifications, admin, notify_settings, dev_auth, keywords, scraper, scraped_events, jobs
 from core.config import settings
 
 # Create a main router for the v1 API
@@ -37,6 +37,10 @@ api_router.include_router(scraper.router, prefix="/scraper", tags=["Scraper"])
 # Include the scraped events router
 # All routes from scraped_events.py will be prefixed with /scraped-events
 api_router.include_router(scraped_events.router, prefix="/scraped-events", tags=["Scraped Events"])
+
+# Include the jobs router
+# All routes from jobs.py will be prefixed with /jobs and /health
+api_router.include_router(jobs.router, tags=["Jobs", "Health"])
 
 # Include development auth router (only in local and dev environments)
 # All routes from dev_auth.py will be prefixed with /dev
