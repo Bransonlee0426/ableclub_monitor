@@ -29,16 +29,11 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
-    openapi_version="3.0.2",  # 使用相容的 OpenAPI 版本
     servers=servers,
-    # 使用原生 Swagger UI 的自訂配置
+    # Configure Swagger UI to persist authorization
     swagger_ui_parameters={
         "persistAuthorization": True,
         "displayRequestDuration": True,
-        "defaultModelsExpandDepth": 1,
-        "defaultModelExpandDepth": 1,
-        "displayOperationId": False,
-        "filter": True
     }
 )
 
