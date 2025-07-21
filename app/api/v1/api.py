@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.v1.endpoints import auth, users, notifications, admin, notify_settings, dev_auth, keywords
+from core.config import settings
 
 # Create a main router for the v1 API
 api_router = APIRouter()
@@ -29,6 +30,7 @@ api_router.include_router(notify_settings.router, prefix="/me/notify-settings", 
 # All routes from keywords.py will be prefixed with /me/keywords
 api_router.include_router(keywords.router, prefix="/me/keywords", tags=["Keywords"])
 
-# Include development auth router (only in development)
+# Include development auth router (only in local and dev environments)
 # All routes from dev_auth.py will be prefixed with /dev
-api_router.include_router(dev_auth.router, prefix="/dev", tags=["🚧 Development Only"])
+if settings.ENVIRONMENT in ["local", "dev"]:
+    api_router.include_router(dev_auth.router, prefix="/dev", tags=["🚧 Development Only"])

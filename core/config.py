@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     # --- CORS and Environment Settings ---
     ENABLE_CORS: bool = Field(default=False, description="Enable CORS middleware")
     LOG_LEVEL: str = Field(default="INFO", description="Application log level")
+    ENVIRONMENT: str = Field(default="local", description="Application environment (local, dev, prod)")
 
 
     model_config = ConfigDict(

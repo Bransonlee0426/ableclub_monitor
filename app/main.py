@@ -29,7 +29,12 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
-    servers=servers
+    servers=servers,
+    # Configure Swagger UI to persist authorization
+    swagger_ui_parameters={
+        "persistAuthorization": True,
+        "displayRequestDuration": True,
+    }
 )
 
 # Configure CORS settings based on environment
