@@ -29,6 +29,7 @@ from models.invitation_code import InvitationCode
 from models.event import Event
 from models.keyword import Keyword
 from models.notify_setting import NotifySetting
+from models.scraped_event import ScrapedEvent
 from database.session import Base
 target_metadata = Base.metadata
 

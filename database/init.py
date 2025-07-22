@@ -15,6 +15,7 @@ from models.event import Event
 from models.invitation_code import InvitationCode
 from models.notify_setting import NotifySetting
 from models.keyword import Keyword
+from models.job_execution_history import JobExecutionHistory
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -31,7 +32,7 @@ def check_tables_exist() -> dict:
         inspector = inspect(engine)
         existing_tables = inspector.get_table_names()
         
-        required_tables = ['users', 'events', 'invitation_codes', 'notify_settings', 'keywords']
+        required_tables = ['users', 'events', 'invitation_codes', 'notify_settings', 'keywords', 'job_execution_history']
         table_status = {}
         
         for table in required_tables:
