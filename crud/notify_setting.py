@@ -1,6 +1,8 @@
 # This file contains all the database operations (CRUD) for the NotifySetting model.
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 from models.notify_setting import NotifySetting
+from models.user import User
+from models.keyword import Keyword
 from schemas.notify_setting import NotifySettingCreate, NotifySettingUpdate
 from typing import Optional, List, Tuple
 
@@ -78,6 +80,59 @@ def get_notify_setting_by_user_and_type(
         NotifySetting.user_id == user_id,
         NotifySetting.notify_type == notify_type
     ).first()
+
+
+def get_multi(db: Session, *, skip: int = 0, limit: int = 100) -> List[dict]:
+    """
+    Get multiple notification settings with pagination, including keywords.
+    
+    This function fetches notification settings with their associated keywords
+    to avoid N+1 queries. Each setting includes the user's complete keyword list.
+    
+    Args:
+        db: Database session
+        skip: Number of records to skip for pagination
+        limit: Maximum number of records to return
+        
+    Returns:
+        List of notification setting dictionaries with keywords included
+    """
+    from crud.keyword import get_by_user_id as get_keywords_by_user_id
+    
+    # Get notification settings with pagination
+    notify_settings = (
+        db.query(NotifySetting)
+        .order_by(NotifySetting.id)
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    
+    # Get all unique user IDs to fetch keywords efficiently
+    user_ids = list(set(setting.user_id for setting in notify_settings))
+    
+    # Fetch keywords for all users at once to avoid N+1 queries
+    user_keywords_map = {}
+    for user_id in user_ids:
+        keywords_objs = get_keywords_by_user_id(db, user_id)
+        user_keywords_map[user_id] = [keyword.keyword for keyword in keywords_objs]
+    
+    # Convert notification settings to dicts and add keywords
+    settings_with_keywords = []
+    for setting in notify_settings:
+        setting_dict = {
+            "id": setting.id,
+            "user_id": setting.user_id,
+            "notify_type": setting.notify_type,
+            "email_address": setting.email_address,
+            "is_active": setting.is_active,
+            "created_at": setting.created_at,
+            "updated_at": setting.updated_at,
+            "keywords": user_keywords_map.get(setting.user_id, [])
+        }
+        settings_with_keywords.append(setting_dict)
+    
+    return settings_with_keywords
 
 
 def get_user_notify_settings(

@@ -13,8 +13,8 @@ IMAGE_URI="gcr.io/${PROJECT_ID}/${APP_NAME}"
 DATABASE_URL="${DATABASE_URL:-postgresql://neondb_owner:npg_RQj3U7zuHoOS@ep-soft-forest-a1htqaql-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require}"
 SECRET_KEY="${SECRET_KEY:-}"
 ALGORITHM="${ALGORITHM:-HS256}"
-EMAIL_USER="${EMAIL_USER:-bransonlee0426@gmail.com}"
-EMAIL_PASSWORD="${EMAIL_PASSWORD:-ebvnpqhnwlkykrrh}"
+EMAIL_USER="${EMAIL_USER:-anythingforgood@gmail.com}"
+EMAIL_PASSWORD="${EMAIL_PASSWORD:-rukmfywwollcoyfx}"
 DEFAULT_NOTIFICATION_EMAIL="${DEFAULT_NOTIFICATION_EMAIL:-xebiva9350@axcradio.com}"
 
 # 生成 SECRET_KEY 函數
