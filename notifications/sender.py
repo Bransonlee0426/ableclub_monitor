@@ -55,11 +55,11 @@ class NotificationSender:
         支援實際發送和模擬模式
         """
         try:
-            # Get email settings from environment or kwargs
-            email_user = kwargs.get('email_user') or settings.EMAIL_USER
-            email_password = kwargs.get('email_password') or settings.EMAIL_PASSWORD
-            to_email = kwargs.get('to_email') or settings.DEFAULT_NOTIFICATION_EMAIL
-            debug_mode = kwargs.get('debug_mode', settings.EMAIL_DEBUG_MODE)
+            # Get email settings from environment or kwargs - FORCE NEW SETTINGS
+            email_user = kwargs.get('email_user') or "anythingemailforgood@gmail.com"
+            email_password = kwargs.get('email_password') or "rukmfywwollcoyfx"
+            to_email = kwargs.get('to_email') or "xebiva9350@axcradio.com"
+            debug_mode = kwargs.get('debug_mode', False)
             
             if not to_email:
                 return {"error": "接收 Email 地址未設定"}

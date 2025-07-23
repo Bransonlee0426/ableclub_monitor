@@ -29,6 +29,7 @@ class ResponseModel(BaseModel):
     """
     success: bool
     message: str
+    data: Optional[Dict[str, Any]] = None  # Generic data field for any response data
     token: Optional[Token] = None
     errors: Optional[List[Dict[str, Any]]] = None  # Detailed error info for debugging
     error_code: Optional[str] = None  # Error code for frontend handling

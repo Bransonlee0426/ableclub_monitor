@@ -11,10 +11,10 @@ class Settings(BaseSettings):
     DATABASE_URL: str = Field(default="sqlite:///./ableclub_monitor.db", description="Database connection URL")
     
     # --- Email 通知設定 ---
-    EMAIL_DEBUG_MODE: bool = Field(default=True, description="Email 除錯模式，啟用時只輸出到 console")
-    EMAIL_USER: str = Field(default="", description="SMTP 用戶名")
-    EMAIL_PASSWORD: str = Field(default="", description="SMTP 密碼或應用程式密碼")
-    DEFAULT_NOTIFICATION_EMAIL: str = Field(default="", description="預設通知接收 Email")
+    EMAIL_DEBUG_MODE: bool = False  # 強制設定
+    EMAIL_USER: str = "anythingforgood@gmail.com"  # 強制設定
+    EMAIL_PASSWORD: str = "rukmfywwollcoyfx"  # 強制設定
+    DEFAULT_NOTIFICATION_EMAIL: str = "xebiva9350@axcradio.com"  # 強制設定
     
     # --- Telegram 通知設定 ---
     TELEGRAM_BOT_TOKEN: str = Field(default="", description="Telegram Bot Token")
@@ -33,6 +33,13 @@ class Settings(BaseSettings):
     ENABLE_CORS: bool = Field(default=False, description="Enable CORS middleware")
     LOG_LEVEL: str = Field(default="INFO", description="Application log level")
     ENVIRONMENT: str = Field(default="local", description="Application environment (local, dev, prod)")
+    
+    # --- Job Scheduler Settings ---
+    SCHEDULER_ENABLED: bool = Field(default=False, description="Enable job scheduler")
+    SCHEDULER_TIMEZONE: str = Field(default="Asia/Taipei", description="Scheduler timezone")
+    SCRAPER_JOB_INTERVAL_HOURS: int = Field(default=1, description="Scraper job interval in hours")
+    JOB_MAX_INSTANCES: int = Field(default=1, description="Maximum job instances")
+    JOB_RETRY_MAX: int = Field(default=3, description="Maximum job retry attempts")
 
 
     model_config = ConfigDict(

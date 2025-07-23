@@ -115,13 +115,35 @@ from database.init import init_database, get_database_info
 @app.on_event("startup")
 async def startup_event():
     """
-    Initialize database on application startup
+    Initialize database and start scheduler on application startup
     """
     try:
+        # Initialize database
         init_database()
+        
+        # Start job scheduler if enabled
+        if settings.SCHEDULER_ENABLED:
+            from scheduler.job_scheduler import scheduler_manager
+            await scheduler_manager.start_scheduler()
+        else:
+            print("ℹ️  Job scheduler is disabled in settings")
+            
     except Exception as e:
-        print(f"Database initialization failed: {e}")
+        print(f"Startup initialization failed: {e}")
         # Don't fail the startup, just log the error
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """
+    Gracefully shutdown scheduler on application shutdown
+    """
+    try:
+        if settings.SCHEDULER_ENABLED:
+            from scheduler.job_scheduler import scheduler_manager
+            await scheduler_manager.shutdown_scheduler()
+    except Exception as e:
+        print(f"Error during shutdown: {e}")
 
 @app.get("/api/v1/system/database-info", 
          tags=["System"], 

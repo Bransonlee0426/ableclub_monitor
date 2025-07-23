@@ -2,7 +2,7 @@
 
 import asyncio
 from playwright.async_api import async_playwright, Page, Error
-from typing import List
+from typing import List, Dict
 import time
 import os
 
@@ -34,7 +34,7 @@ async def scrape_main_menu(page: Page) -> List[str]:
     return main_menu_items
 
 # --- Function 2: Scrape Corporate Events ---
-async def scrape_corporate_events(page: Page) -> List[str]:
+async def scrape_corporate_events(page: Page) -> List[Dict]:
     """
     Filters for '報名中活動' (Events Open for Registration) and scrapes their titles across all pages
     by handling pagination. Assumes the page is already on the '公司活動' page.
@@ -43,17 +43,46 @@ async def scrape_corporate_events(page: Page) -> List[str]:
         page: The Playwright Page object on the corporate events page.
 
     Returns:
-        A list of all event titles found across all pages.
+        A list of dictionaries containing event details (title, start_date, end_date) found across all pages.
     """
-    print("篩選「報名中活動」並爬取所有頁面的標題...")
+    print("檢查並篩選「報名中活動」，然後爬取所有頁面的標題...")
 
-    # Click the filter dropdown
-    await page.locator("#ableclub-filter-menu").click()
+    # Check current filter status first
+    try:
+        # Wait for the filter menu to be present
+        await page.wait_for_selector("#ableclub-filter-menu", timeout=10000)
+        
+        # Get the current filter text from the dropdown button
+        current_filter_element = page.locator("#ableclub-filter-menu .dropdown a")
+        current_filter_text = await current_filter_element.text_content()
+        print(f"目前篩選狀態: {current_filter_text}")
+        
+        # Only change filter if it's not already set to "報名中活動"
+        if current_filter_text != "報名中活動":
+            print("需要切換到「報名中活動」篩選...")
+            # Click the filter dropdown
+            await page.locator("#ableclub-filter-menu").click()
+            
+            # Wait for dropdown options to appear
+            await page.wait_for_selector("a.dropdown-item", timeout=5000)
+            
+            # Click the "報名中活動" option
+            await page.locator("a.dropdown-item").get_by_text("報名中活動", exact=True).click()
+            print("已切換到「報名中活動」篩選")
+        else:
+            print("篩選已經是「報名中活動」，無需變更")
+            
+    except Exception as e:
+        print(f"篩選狀態檢查失敗，嘗試直接點擊篩選: {e}")
+        # Fallback to original logic if checking fails
+        try:
+            await page.locator("#ableclub-filter-menu").click()
+            await page.locator("a.dropdown-item").get_by_text("報名中活動", exact=True).click()
+        except Exception as fallback_error:
+            print(f"篩選操作完全失敗: {fallback_error}")
+            # Continue anyway in case the filter is already correct
 
-    # Click the "報名中活動" option to ensure there are multiple pages
-    await page.locator("a.dropdown-item").get_by_text("報名中活動", exact=True).click()
-
-    all_event_titles = []
+    all_event_data = []
     page_number = 1
 
     while True:
@@ -63,10 +92,51 @@ async def scrape_corporate_events(page: Page) -> List[str]:
 
         # 2. Scrape data from the current page.
         card_group_container = page.locator(".ableclub-cardgroup")
-        title_elements = card_group_container.locator("h3.card-title")
-        current_page_titles = await title_elements.all_text_contents()
-        all_event_titles.extend(current_page_titles)
-        print(f"本頁找到 {len(current_page_titles)} 個活動標題。")
+        
+        # Get all event cards on current page
+        event_cards = await card_group_container.locator(".card").all()
+        current_page_events = []
+        
+        for card in event_cards:
+            try:
+                # Extract title from h3.card-title
+                title_element = card.locator("h3.card-title")
+                title = await title_element.text_content()
+                title = title.strip() if title else ""
+                
+                # Check if p.text-date exists and extract dates
+                start_date = ""
+                end_date = ""
+                
+                date_element = card.locator("p.text-date")
+                if await date_element.count() > 0:
+                    # Get all time elements within p.text-date
+                    time_elements = await date_element.locator("time").all()
+                    
+                    if len(time_elements) >= 1:
+                        start_date_text = await time_elements[0].text_content()
+                        start_date = start_date_text.strip() if start_date_text else ""
+                    
+                    if len(time_elements) >= 2:
+                        end_date_text = await time_elements[1].text_content()
+                        end_date = end_date_text.strip() if end_date_text else ""
+                
+                event_data = {
+                    "title": title,
+                    "start_date": start_date,
+                    "end_date": end_date
+                }
+                
+                current_page_events.append(event_data)
+                print(f"  - {title} | 開始: {start_date} | 結束: {end_date}")
+                
+            except Exception as e:
+                print(f"爬取單一活動時發生錯誤: {e}")
+                # Continue processing other events
+                continue
+        
+        all_event_data.extend(current_page_events)
+        print(f"本頁找到 {len(current_page_events)} 個活動。")
 
         # 3. Locate the 'Next' button and check its state.
         # The specific selector for the 'Next' page <li> element.
@@ -89,8 +159,8 @@ async def scrape_corporate_events(page: Page) -> List[str]:
             print("「下一頁」按鈕已禁用，已到達最後一頁。")
             break
             
-    # 5. Return the final list of all titles.
-    return all_event_titles
+    # 5. Return the final list of all event data.
+    return all_event_data
 
 # --- Function 3: Main Orchestrator ---
 async def run_ableclub_scraper():
