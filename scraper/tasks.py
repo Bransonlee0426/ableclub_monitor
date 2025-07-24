@@ -86,8 +86,9 @@ async def scrape_corporate_events(page: Page) -> List[Dict]:
     page_number = 1
 
     while True:
-        # 1. Wait for the current page's content to be fully loaded.
-        await page.wait_for_selector('.ableclub-cardgroup')
+        # 1. Wait for the event cards to be loaded dynamically by JavaScript.
+        # We'll wait for the first '.card' element to appear, which indicates the AJAX call is complete.
+        await page.wait_for_selector('.card', state='visible', timeout=15000)
         print(f"正在爬取第 {page_number} 頁...")
 
         # 2. Scrape data from the current page.
