@@ -235,6 +235,63 @@ async def delete_scraped_event(
         )
 
 
+@router.put("/{event_id}/processed", 
+            response_model=ResponseModel,
+            tags=["Scraped Events"], 
+            summary="標記活動為已處理",
+            description="將指定的活動標記為已處理狀態（is_processed=True）")
+async def mark_event_as_processed(
+    event_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Mark a scraped event as processed.
+    
+    Args:
+        event_id: ID of the event to mark as processed
+        db: Database session
+        
+    Returns:
+        ResponseModel: Confirmation of status update
+    """
+    try:
+        # Update the event's processed status
+        updated_event = crud_scraped_event.update_processed_status(
+            db=db, 
+            event_id=event_id, 
+            is_processed=True
+        )
+        
+        if not updated_event:
+            raise HTTPException(
+                status_code=404,
+                detail=f"找不到 ID 為 {event_id} 的活動"
+            )
+        
+        event_data = {
+            "id": updated_event.id,
+            "title": updated_event.title,
+            "start_date": updated_event.start_date.isoformat(),
+            "end_date": updated_event.end_date.isoformat() if updated_event.end_date else None,
+            "is_processed": updated_event.is_processed,
+            "created_at": updated_event.created_at.isoformat()
+        }
+        
+        return ResponseModel(
+            success=True,
+            message=f"活動 ID {event_id} 已標記為已處理",
+            data={"event": event_data}
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"更新活動狀態失敗: {str(e)}"
+        )
+
+
 @router.get("/stats/summary", 
             response_model=ResponseModel,
             tags=["Scraped Events"], 

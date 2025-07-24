@@ -98,6 +98,27 @@ def get_unprocessed_events(db: Session, skip: int = 0, limit: int = 100) -> List
 
 
 
+def update_processed_status(db: Session, event_id: int, is_processed: bool = True) -> Optional[ScrapedEvent]:
+    """
+    Update the processed status of a ScrapedEvent.
+    
+    Args:
+        db: Database session
+        event_id: ID of the event to update
+        is_processed: New processed status (default: True)
+        
+    Returns:
+        Updated ScrapedEvent object if found, None otherwise
+    """
+    event = db.query(ScrapedEvent).filter(ScrapedEvent.id == event_id).first()
+    if event:
+        event.is_processed = is_processed
+        db.commit()
+        db.refresh(event)
+        return event
+    return None
+
+
 def delete_event(db: Session, event_id: int) -> bool:
     """
     Delete a ScrapedEvent by its ID.
