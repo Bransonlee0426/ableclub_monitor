@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List
 from datetime import datetime
+from core.datetime_utils import TaiwanDatetimeMixin, datetime_field
 
 
 class UserUpdate(BaseModel):
@@ -16,14 +17,14 @@ class UserUpdate(BaseModel):
     )
 
 
-class UserPublic(BaseModel):
+class UserPublic(BaseModel, TaiwanDatetimeMixin):
     """使用者公開資訊回應的資料模型 (不包含密碼)"""
     id: int = Field(..., description="使用者 ID")
     username: str = Field(..., description="使用者名稱 (Email)")
     invite_code_used: Optional[str] = Field(default=None, description="使用的邀請碼")
     is_active: bool = Field(..., description="是否啟用")
-    created_at: datetime = Field(..., description="建立時間")
-    updated_at: datetime = Field(..., description="更新時間")
+    created_at: datetime = datetime_field("建立時間")
+    updated_at: datetime = datetime_field("更新時間")
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -33,8 +34,8 @@ class UserPublic(BaseModel):
                 "username": "user@example.com",
                 "invite_code_used": "WELCOME2024",
                 "is_active": True,
-                "created_at": "2024-01-01T00:00:00",
-                "updated_at": "2024-01-01T00:00:00"
+                "created_at": "2024-01-01-00:00",
+                "updated_at": "2024-01-01-00:00"
             }
         }
     )
@@ -57,8 +58,8 @@ class UserListResponse(BaseModel):
                         "username": "user@example.com",
                         "invite_code_used": "WELCOME2024",
                         "is_active": True,
-                        "created_at": "2024-01-01T00:00:00",
-                        "updated_at": "2024-01-01T00:00:00"
+                        "created_at": "2024-01-01-00:00",
+                        "updated_at": "2024-01-01-00:00"
                     }
                 ],
                 "total": 1,

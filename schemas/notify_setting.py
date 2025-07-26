@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator, ConfigD
 from typing import Optional, List
 from datetime import datetime
 import re
+from core.datetime_utils import TaiwanDatetimeMixin, datetime_field
 
 
 class NotifySettingBase(BaseModel):
@@ -82,15 +83,15 @@ class NotifySettingUpdate(BaseModel):
     )
 
 
-class NotifySettingResponse(BaseModel):
+class NotifySettingResponse(BaseModel, TaiwanDatetimeMixin):
     """通知設定回應的資料模型"""
     id: int = Field(..., description="通知設定 ID")
     user_id: int = Field(..., description="使用者 ID")
     notify_type: str = Field(..., description="通知類型")
     email_address: Optional[str] = Field(default=None, description="Email 地址")
     is_active: bool = Field(..., description="是否啟用")
-    created_at: datetime = Field(..., description="建立時間")
-    updated_at: datetime = Field(..., description="更新時間")
+    created_at: datetime = datetime_field("建立時間")
+    updated_at: datetime = datetime_field("更新時間")
     keywords: List[str] = Field(default=[], description="使用者設定的關鍵字列表")
 
     model_config = ConfigDict(
@@ -102,8 +103,8 @@ class NotifySettingResponse(BaseModel):
                 "notify_type": "email",
                 "email_address": "user@example.com",
                 "is_active": True,
-                "created_at": "2024-01-01T00:00:00",
-                "updated_at": "2024-01-01T00:00:00",
+                "created_at": "2024-01-01-00:00",
+                "updated_at": "2024-01-01-00:00",
                 "keywords": ["Python", "FastAPI"]
             }
         }
@@ -125,8 +126,8 @@ class NotifySettingListResponse(BaseModel):
                         "notify_type": "email",
                         "email_address": "user@example.com",
                         "is_active": True,
-                        "created_at": "2024-01-01T00:00:00",
-                        "updated_at": "2024-01-01T00:00:00",
+                        "created_at": "2024-01-01-00:00",
+                        "updated_at": "2024-01-01-00:00",
                         "keywords": ["Python", "FastAPI"]
                     }
                 ],

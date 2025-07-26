@@ -1,6 +1,7 @@
 from typing import Optional, Dict, Any
 from datetime import datetime
 from pydantic import BaseModel
+from core.datetime_utils import TaiwanDatetimeMixin, datetime_field
 
 
 class JobExecutionHistoryBase(BaseModel):
@@ -9,8 +10,8 @@ class JobExecutionHistoryBase(BaseModel):
     """
     job_name: str = "corporate_events_scraper"
     status: str
-    started_at: datetime
-    completed_at: Optional[datetime] = None
+    started_at: datetime = datetime_field("開始時間")
+    completed_at: Optional[datetime] = datetime_field("完成時間")
     duration: Optional[int] = None
     scraped_count: Optional[int] = None
     saved_new_count: Optional[int] = None
@@ -31,7 +32,7 @@ class JobExecutionHistoryUpdate(BaseModel):
     Schema for updating job execution history record
     """
     status: Optional[str] = None
-    completed_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = datetime_field("完成時間")
     duration: Optional[int] = None
     scraped_count: Optional[int] = None
     saved_new_count: Optional[int] = None
@@ -45,13 +46,13 @@ class JobExecutionHistoryInDB(JobExecutionHistoryBase):
     Schema for job execution history in database
     """
     id: int
-    created_at: datetime
+    created_at: datetime = datetime_field("建立時間")
 
     class Config:
         from_attributes = True
 
 
-class JobExecutionHistoryResponse(JobExecutionHistoryInDB):
+class JobExecutionHistoryResponse(JobExecutionHistoryInDB, TaiwanDatetimeMixin):
     """
     Schema for job execution history API response
     """
@@ -70,13 +71,13 @@ class JobStatsResponse(BaseModel):
     recent_failure_reasons: list[str]
 
 
-class JobStatusResponse(BaseModel):
+class JobStatusResponse(BaseModel, TaiwanDatetimeMixin):
     """
     Schema for job status response
     """
     job_status: str  # "running", "stopped", "paused"
-    last_execution_time: Optional[datetime] = None
+    last_execution_time: Optional[datetime] = datetime_field("最後執行時間")
     last_execution_result: Optional[Dict[str, Any]] = None
-    next_run_time: Optional[datetime] = None
+    next_run_time: Optional[datetime] = datetime_field("下次執行時間")
     is_paused: bool = False
     consecutive_failures: int = 0
