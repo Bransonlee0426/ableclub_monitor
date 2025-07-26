@@ -23,4 +23,5 @@ EXPOSE 8080
 # Uvicorn is a lightning-fast ASGI server, recommended for FastAPI
 # Remove --reload for production deployment
 # Use PORT environment variable for Cloud Run compatibility
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
+# Add timeout and worker settings for faster startup
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080} --timeout-keep-alive 30 --access-log --workers 1"]

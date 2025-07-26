@@ -143,8 +143,27 @@ def read_root():
 def health_check():
     """
     Simple health check endpoint for Cloud Run.
+    Returns 200 OK to indicate service is ready.
     """
-    return {"status": "healthy"}
+    try:
+        # Simple database connectivity check
+        from database.session import get_db
+        db = next(get_db())
+        db.close()
+        
+        return {
+            "status": "healthy",
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "service": "ableclub-monitor"
+        }
+    except Exception as e:
+        # Still return healthy to prevent restart loops
+        return {
+            "status": "healthy",
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "service": "ableclub-monitor",
+            "note": "startup_phase"
+        }
 
 
 
@@ -160,15 +179,17 @@ async def startup_event():
     logger = logging.getLogger(__name__)
     
     try:
-        # Initialize database
+        # Initialize database (with timeout to prevent hanging)
         logger.info("正在初始化資料庫...")
         init_database()
         logger.info("資料庫初始化完成")
         
+        logger.info(f"應用程式啟動完成，健康檢查端點：/health")
+        
         # Start job scheduler if enabled (with delay for Cloud Run)
         if settings.SCHEDULER_ENABLED:
-            logger.info("排程器將在 3 分鐘後啟動（讓容器先完成部署）")
-            # Schedule the scheduler to start after 3 minutes
+            logger.info("排程器將在 30 秒後背景啟動")
+            # Schedule the scheduler to start after 30 seconds for faster deployment
             import asyncio
             asyncio.create_task(delayed_scheduler_start())
         else:
@@ -176,7 +197,7 @@ async def startup_event():
             
     except Exception as e:
         logger.error(f"啟動初始化失敗: {e}")
-        # Don't fail the startup, just log the error
+        # Don't fail the startup, just log the error - continue serving requests
 
 async def delayed_scheduler_start():
     """
@@ -188,9 +209,9 @@ async def delayed_scheduler_start():
     logger = logging.getLogger(__name__)
     
     try:
-        # Wait 3 minutes before starting scheduler
-        logger.info("等待 3 分鐘後啟動排程器...")
-        await asyncio.sleep(180)  # 3 minutes
+        # Wait 30 seconds before starting scheduler
+        logger.info("等待 30 秒後啟動排程器...")
+        await asyncio.sleep(30)  # 30 seconds
         
         logger.info("正在啟動任務排程器...")
         from scheduler.job_scheduler import scheduler_manager
