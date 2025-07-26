@@ -5,8 +5,6 @@ from datetime import datetime
 import pytz
 from typing import Optional
 from pydantic import field_serializer, Field
-from pydantic.json_schema import JsonSchemaValue
-from pydantic._internal._generate_schema import GetJsonSchemaFunction
 
 # Taiwan timezone
 TAIWAN_TZ = pytz.timezone('Asia/Taipei')
@@ -58,7 +56,9 @@ class TaiwanDatetimeMixin:
     Mixin class to add Taiwan datetime formatting to Pydantic models
     """
     
-    @field_serializer('created_at', 'updated_at', 'execution_time', 'started_at', 'ended_at', when_used='json')
+    @field_serializer('created_at', 'updated_at', 'execution_time', 'started_at', 'ended_at', 
+                     'expires_at', 'completed_at', 'last_execution_time', 'next_run_time',
+                     when_used='json', check_fields=False)
     def serialize_datetime_fields(self, value: Optional[datetime]) -> Optional[str]:
         """Serialize datetime fields to Taiwan timezone format"""
         return format_datetime_taiwan(value)
