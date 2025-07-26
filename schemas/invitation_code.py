@@ -1,13 +1,14 @@
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing import Optional, List
 from datetime import datetime
+from core.datetime_utils import TaiwanDatetimeMixin, datetime_field
 
 
 class InvitationCodeCreate(BaseModel):
     """邀請碼建立請求的資料模型"""
     code: str = Field(..., description="邀請碼", min_length=1, max_length=255)
     description: Optional[str] = Field(default=None, description="邀請碼描述")
-    expires_at: Optional[datetime] = Field(default=None, description="到期時間")
+    expires_at: Optional[datetime] = datetime_field("到期時間")
 
     @field_validator('expires_at', mode='before')
     @classmethod
@@ -22,7 +23,7 @@ class InvitationCodeCreate(BaseModel):
             "example": {
                 "code": "WELCOME2024",
                 "description": "2024年歡迎新用戶邀請碼",
-                "expires_at": "2024-12-31T23:59:59"
+                "expires_at": "2024-12-31-23:59"
             }
         }
     )
@@ -32,7 +33,7 @@ class InvitationCodeUpdate(BaseModel):
     """邀請碼更新請求的資料模型"""
     description: Optional[str] = Field(default=None, description="邀請碼描述")
     is_active: Optional[bool] = Field(default=None, description="是否啟用")
-    expires_at: Optional[datetime] = Field(default=None, description="到期時間")
+    expires_at: Optional[datetime] = datetime_field("到期時間")
 
     @field_validator('expires_at', mode='before')
     @classmethod
@@ -47,21 +48,21 @@ class InvitationCodeUpdate(BaseModel):
             "example": {
                 "description": "更新後的描述",
                 "is_active": False,
-                "expires_at": "2024-12-31T23:59:59"
+                "expires_at": "2024-12-31-23:59"
             }
         }
     )
 
 
-class InvitationCodeResponse(BaseModel):
+class InvitationCodeResponse(BaseModel, TaiwanDatetimeMixin):
     """邀請碼回應的資料模型"""
     id: int = Field(..., description="邀請碼 ID")
     code: str = Field(..., description="邀請碼")
     description: Optional[str] = Field(default=None, description="邀請碼描述")
     is_active: bool = Field(..., description="是否啟用")
-    expires_at: Optional[datetime] = Field(default=None, description="到期時間")
-    created_at: datetime = Field(..., description="建立時間")
-    updated_at: datetime = Field(..., description="更新時間")
+    expires_at: Optional[datetime] = datetime_field("到期時間")
+    created_at: datetime = datetime_field("建立時間")
+    updated_at: datetime = datetime_field("更新時間")
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -71,9 +72,9 @@ class InvitationCodeResponse(BaseModel):
                 "code": "WELCOME2024",
                 "description": "2024年歡迎新用戶邀請碼",
                 "is_active": True,
-                "expires_at": "2024-12-31T23:59:59",
-                "created_at": "2024-01-01T00:00:00",
-                "updated_at": "2024-01-01T00:00:00"
+                "expires_at": "2024-12-31-23:59",
+                "created_at": "2024-01-01-00:00",
+                "updated_at": "2024-01-01-00:00"
             }
         }
     )
@@ -96,9 +97,9 @@ class InvitationCodeListResponse(BaseModel):
                         "code": "WELCOME2024",
                         "description": "2024年歡迎新用戶邀請碼",
                         "is_active": True,
-                        "expires_at": "2024-12-31T23:59:59",
-                        "created_at": "2024-01-01T00:00:00",
-                        "updated_at": "2024-01-01T00:00:00"
+                        "expires_at": "2024-12-31-23:59",
+                        "created_at": "2024-01-01-00:00",
+                        "updated_at": "2024-01-01-00:00"
                     }
                 ],
                 "total": 1,

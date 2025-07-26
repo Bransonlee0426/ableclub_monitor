@@ -415,6 +415,7 @@ async def get_job_status() -> Dict[str, Any]:
     try:
         # Import here to avoid circular imports
         from scheduler.job_scheduler import scheduler_manager
+        from core.datetime_utils import format_datetime_taiwan
         
         # Get scheduler status
         is_running = scheduler_manager.is_job_running("corporate_events_scraper")
@@ -435,7 +436,7 @@ async def get_job_status() -> Dict[str, Any]:
             
         result = {
             "job_status": status,
-            "last_execution_time": latest_execution.started_at if latest_execution else None,
+            "last_execution_time": format_datetime_taiwan(latest_execution.started_at) if latest_execution else None,
             "last_execution_result": {
                 "status": latest_execution.status,
                 "scraped_count": latest_execution.scraped_count,
@@ -443,7 +444,7 @@ async def get_job_status() -> Dict[str, Any]:
                 "duration": latest_execution.duration,
                 "error_message": latest_execution.error_message
             } if latest_execution else None,
-            "next_run_time": next_run_time,
+            "next_run_time": format_datetime_taiwan(next_run_time),
             "is_paused": is_paused,
             "consecutive_failures": consecutive_failures
         }

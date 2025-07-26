@@ -1,15 +1,16 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List
 from datetime import datetime
+from core.datetime_utils import TaiwanDatetimeMixin, datetime_field
 
 
-class KeywordResponse(BaseModel):
+class KeywordResponse(BaseModel, TaiwanDatetimeMixin):
     """關鍵字回應的資料模型"""
     id: int = Field(..., description="關鍵字 ID")
     user_id: int = Field(..., description="使用者 ID")
     keyword: str = Field(..., description="關鍵字內容")
-    created_at: datetime = Field(..., description="建立時間")
-    updated_at: datetime = Field(..., description="更新時間")
+    created_at: datetime = datetime_field("建立時間")
+    updated_at: datetime = datetime_field("更新時間")
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -18,8 +19,8 @@ class KeywordResponse(BaseModel):
                 "id": 1,
                 "user_id": 1,
                 "keyword": "Python",
-                "created_at": "2024-01-01T00:00:00",
-                "updated_at": "2024-01-01T00:00:00"
+                "created_at": "2024-01-01-00:00",
+                "updated_at": "2024-01-01-00:00"
             }
         }
     )

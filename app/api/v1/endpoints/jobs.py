@@ -152,7 +152,7 @@ async def get_execution_history(
             )
         
         execution_responses = [
-            JobExecutionHistoryResponse.model_validate(execution) 
+            JobExecutionHistoryResponse.model_validate(execution).model_dump() 
             for execution in executions
         ]
         
@@ -205,7 +205,7 @@ async def get_execution_detail(
         return ResponseModel(
             success=True,
             message="執行記錄詳情查詢成功",
-            data=JobExecutionHistoryResponse.model_validate(execution)
+            data=JobExecutionHistoryResponse.model_validate(execution).model_dump()
         )
         
     except HTTPException:
@@ -383,7 +383,7 @@ async def get_notification_execution_history(
         )
         
         execution_responses = [
-            JobExecutionHistoryResponse.model_validate(execution) 
+            JobExecutionHistoryResponse.model_validate(execution).model_dump() 
             for execution in executions
         ]
         
@@ -479,18 +479,19 @@ async def scheduler_health_check():
     """
     try:
         from scheduler.job_scheduler import scheduler_manager
+        from core.datetime_utils import format_datetime_taiwan
         
         health_info = {
             "scheduler_running": scheduler_manager.is_running,
             "scraper_job": {
                 "scheduled": scheduler_manager.is_job_running("corporate_events_scraper"),
                 "paused": scheduler_manager.is_job_paused("corporate_events_scraper"),
-                "next_run_time": scheduler_manager.get_next_run_time("corporate_events_scraper")
+                "next_run_time": format_datetime_taiwan(scheduler_manager.get_next_run_time("corporate_events_scraper"))
             },
             "notification_job": {
                 "scheduled": scheduler_manager.is_job_running("notification_processor"),
                 "paused": scheduler_manager.is_job_paused("notification_processor"),
-                "next_run_time": scheduler_manager.get_next_run_time("notification_processor")
+                "next_run_time": format_datetime_taiwan(scheduler_manager.get_next_run_time("notification_processor"))
             }
         }
         

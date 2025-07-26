@@ -204,6 +204,9 @@ class SchedulerManager:
         if not self.is_running:
             return []
             
+        # Import Taiwan datetime formatting function
+        from core.datetime_utils import format_datetime_taiwan
+            
         jobs_info = []
         for job in self.scheduler.get_jobs():
             job_info = {
@@ -211,7 +214,7 @@ class SchedulerManager:
                 "name": job.name,
                 "function": f"{job.func.__module__}.{job.func.__name__}",
                 "trigger": str(job.trigger),
-                "next_run_time": job.next_run_time.isoformat() if job.next_run_time else None,
+                "next_run_time": format_datetime_taiwan(job.next_run_time),
                 "is_paused": job.id in self._paused_jobs,
                 "max_instances": getattr(job, 'max_instances', 1),
                 "args": job.args,
