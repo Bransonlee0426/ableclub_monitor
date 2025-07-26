@@ -103,11 +103,22 @@ check_gcloud() {
         exit 1
     fi
     
-    # 檢查是否已登入
-    if ! gcloud auth list --filter=status:ACTIVE --format="value(account)" | grep -q .; then
-        echo "錯誤: 請先登入 GCP"
-        echo "執行: gcloud auth login"
-        exit 1
+    # 檢查是否已登入（在 CI/CD 環境中跳過交互式檢查）
+    if [ "$CI" = "true" ] || [ -n "$GITHUB_ACTIONS" ]; then
+        echo "🤖 在 CI/CD 環境中，使用 Service Account 認證"
+        # 檢查 Service Account 認證是否可用
+        if ! gcloud auth list --filter=status:ACTIVE --format="value(account)" | grep -q service; then
+            echo "⚠️  警告: 未檢測到 Service Account，嘗試繼續部署"
+        else
+            echo "✅ Service Account 認證已激活"
+        fi
+    else
+        # 本地環境檢查
+        if ! gcloud auth list --filter=status:ACTIVE --format="value(account)" | grep -q .; then
+            echo "錯誤: 請先登入 GCP"
+            echo "執行: gcloud auth login"
+            exit 1
+        fi
     fi
     
     echo "gcloud CLI 已安裝並已登入"
