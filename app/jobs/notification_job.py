@@ -1,11 +1,15 @@
 import httpx
 import logging
+import os
 from typing import Dict, List, Set, Any, Optional
 from notifications.sender import NotificationSender
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Get base API URL from environment or use localhost for development
+BASE_API_URL = os.getenv("BASE_API_URL", "http://127.0.0.1:8000")
 
 
 def process_and_notify_users():
@@ -108,7 +112,7 @@ def _get_all_user_settings() -> List[Dict[str, Any]]:
         
         with httpx.Client() as client:
             response = client.get(
-                "http://localhost:8000/api/v1/admin/notify-settings",
+                f"{BASE_API_URL}/api/v1/admin/notify-settings",
                 headers=headers,
                 params={"limit": 1000}  # Get all settings
             )
@@ -142,7 +146,7 @@ def _get_unprocessed_events() -> List[Dict[str, Any]]:
     try:
         with httpx.Client() as client:
             response = client.get(
-                "http://localhost:8000/api/v1/scraped-events/unprocessed",
+                f"{BASE_API_URL}/api/v1/scraped-events/unprocessed",
                 params={"limit": 100}  # Get unprocessed events (max allowed: 100)
             )
             response.raise_for_status()
@@ -216,7 +220,7 @@ def _update_processed_events(processed_event_ids: Set[int]) -> None:
         try:
             with httpx.Client() as client:
                 response = client.put(
-                    f"http://localhost:8000/api/v1/scraped-events/{event_id}/processed",
+                    f"{BASE_API_URL}/api/v1/scraped-events/{event_id}/processed",
                     headers=headers
                 )
                 response.raise_for_status()
@@ -270,7 +274,7 @@ def _get_auth_token() -> Optional[str]:
         # In production, this should use service account or other secure methods
         with httpx.Client() as client:
             response = client.post(
-                "http://localhost:8000/api/v1/dev/dev-login",
+                f"{BASE_API_URL}/api/v1/dev/dev-login",
                 json={"username": "admin"}
             )
             response.raise_for_status()

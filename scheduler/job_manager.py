@@ -324,7 +324,7 @@ async def _call_notification_processor() -> Dict[str, Any]:
             "execution_time": datetime.utcnow().isoformat()
         }
         
-        # Execute the notification processing function
+        # Execute the notification processing function (sync function)
         process_and_notify_users()
         
         # For now, return basic result - can enhance with actual metrics later
