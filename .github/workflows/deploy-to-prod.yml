@@ -47,7 +47,14 @@ jobs:
     # Step 6: Deploy to Cloud Run Production Environment
     - name: Deploy to Cloud Run (Prod)
       run: |
+        echo "Starting production deployment..."
+        echo "Current directory: $(pwd)"
+        echo "Files in deploy directory:"
+        ls -la deploy/
         # Make deploy script executable
         chmod +x ./deploy/deploy-prod.sh
         # Change to deploy directory and execute production deployment script
-        cd deploy && ./deploy-prod.sh
+        cd deploy
+        echo "Executing deployment script..."
+        ./deploy-prod.sh
+        echo "Deployment script completed with exit code: $?"
