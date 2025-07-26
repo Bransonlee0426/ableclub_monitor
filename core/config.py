@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     SCHEDULER_ENABLED: bool = Field(default=False, description="Enable job scheduler")
     SCHEDULER_TIMEZONE: str = Field(default="Asia/Taipei", description="Scheduler timezone")
     SCRAPER_JOB_INTERVAL_HOURS: int = Field(default=1, description="Scraper job interval in hours")
+    NOTIFICATION_JOB_INTERVAL_HOURS: int = Field(default=1, description="Notification job interval in hours")
     JOB_MAX_INSTANCES: int = Field(default=1, description="Maximum job instances")
     JOB_RETRY_MAX: int = Field(default=3, description="Maximum job retry attempts")
 

@@ -29,7 +29,13 @@ pip install -r requirements.txt
 
 # 3. 啟動 FastAPI 開發服務器
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+
+# 4. 關閉 FastAPI 開發服務器
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 --workers 1 --no-reload
+
 ```
+
+
 
 ### 🔍 驗證啟動狀態
 

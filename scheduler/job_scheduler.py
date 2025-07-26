@@ -32,7 +32,7 @@ class SchedulerManager:
         if not self.is_running:
             try:
                 # Import here to avoid circular imports
-                from scheduler.job_manager import execute_corporate_events_job
+                from scheduler.job_manager import execute_corporate_events_job, execute_notification_job
                 
                 # Add the main scraper job - execute every hour
                 self.scheduler.add_job(
@@ -44,7 +44,17 @@ class SchedulerManager:
                     max_instances=settings.JOB_MAX_INSTANCES  # Prevent overlapping executions
                 )
                 
-                # Execute immediately on startup
+                # Add the notification processor job - execute every hour
+                self.scheduler.add_job(
+                    func=execute_notification_job,
+                    trigger=IntervalTrigger(hours=settings.NOTIFICATION_JOB_INTERVAL_HOURS),
+                    id="notification_processor",
+                    name="Notification Processor",
+                    replace_existing=True,
+                    max_instances=settings.JOB_MAX_INSTANCES  # Prevent overlapping executions
+                )
+                
+                # Execute scraper immediately on startup
                 self.scheduler.add_job(
                     func=execute_corporate_events_job,
                     trigger=DateTrigger(run_date=datetime.now() + timedelta(seconds=5)),
@@ -53,10 +63,20 @@ class SchedulerManager:
                     max_instances=1
                 )
                 
+                # Execute notification processor immediately on startup (with slight delay)
+                self.scheduler.add_job(
+                    func=execute_notification_job,
+                    trigger=DateTrigger(run_date=datetime.now() + timedelta(seconds=15)),
+                    id="notification_processor_immediate",
+                    name="Notification Processor - Immediate Execution",
+                    max_instances=1
+                )
+                
                 self.scheduler.start()
                 self.is_running = True
                 logger.info("✅ Job scheduler started successfully")
                 logger.info(f"Corporate events scraper will run every {settings.SCRAPER_JOB_INTERVAL_HOURS} hour(s)")
+                logger.info(f"Notification processor will run every {settings.NOTIFICATION_JOB_INTERVAL_HOURS} hour(s)")
                 
             except Exception as e:
                 logger.error(f"Failed to start scheduler: {e}")
@@ -173,6 +193,59 @@ class SchedulerManager:
         """
         job = self.scheduler.get_job(job_id)
         return job.next_run_time if job else None
+
+    def get_all_jobs(self) -> list:
+        """
+        Get information about all scheduled jobs
+        
+        Returns:
+            List of job information dictionaries
+        """
+        if not self.is_running:
+            return []
+            
+        jobs_info = []
+        for job in self.scheduler.get_jobs():
+            job_info = {
+                "id": job.id,
+                "name": job.name,
+                "function": f"{job.func.__module__}.{job.func.__name__}",
+                "trigger": str(job.trigger),
+                "next_run_time": job.next_run_time.isoformat() if job.next_run_time else None,
+                "is_paused": job.id in self._paused_jobs,
+                "max_instances": getattr(job, 'max_instances', 1),
+                "args": job.args,
+                "kwargs": job.kwargs
+            }
+            jobs_info.append(job_info)
+            
+        return jobs_info
+
+    def get_scheduler_summary(self) -> dict:
+        """
+        Get a comprehensive summary of the scheduler status
+        
+        Returns:
+            Dictionary containing scheduler and jobs information
+        """
+        jobs = self.get_all_jobs()
+        
+        summary = {
+            "scheduler_enabled": settings.SCHEDULER_ENABLED,
+            "scheduler_running": self.is_running,
+            "scheduler_timezone": settings.SCHEDULER_TIMEZONE,
+            "total_jobs": len(jobs),
+            "active_jobs": len([j for j in jobs if not j["is_paused"]]),
+            "paused_jobs": len([j for j in jobs if j["is_paused"]]),
+            "jobs": jobs,
+            "settings": {
+                "scraper_interval_hours": settings.SCRAPER_JOB_INTERVAL_HOURS,
+                "job_max_instances": settings.JOB_MAX_INSTANCES,
+                "job_retry_max": settings.JOB_RETRY_MAX
+            }
+        }
+        
+        return summary
 
 
 # Global scheduler manager instance

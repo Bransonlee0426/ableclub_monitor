@@ -10,7 +10,7 @@ from schemas.job_execution_history import (
     JobStatusResponse
 )
 from crud.crud_job_execution_history import crud_job_execution_history
-from scheduler.job_manager import get_job_status, stop_job, trigger_corporate_events_job
+from scheduler.job_manager import get_job_status, stop_job, trigger_corporate_events_job, trigger_notification_job
 
 router = APIRouter()
 
@@ -255,7 +255,7 @@ async def get_execution_stats(
 @router.post("/jobs/scraper/trigger",
              response_model=ResponseModel,
              tags=["Jobs"],
-             summary="手動觸發任務",
+             summary="手動觸發爬蟲任務",
              description="手動觸發執行一次 corporate events 爬蟲任務（開發用）")
 async def trigger_scraper_job():
     """
@@ -270,14 +270,198 @@ async def trigger_scraper_job():
         
         return ResponseModel(
             success=True,
-            message="任務已手動觸發執行",
+            message="爬蟲任務已手動觸發執行",
             data=result
         )
         
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"手動觸發任務失敗: {str(e)}"
+            detail=f"手動觸發爬蟲任務失敗: {str(e)}"
+        )
+
+
+@router.post("/jobs/notification/trigger",
+             response_model=ResponseModel,
+             tags=["Jobs"],
+             summary="手動觸發通知任務",
+             description="手動觸發執行一次通知處理任務（開發用）")
+async def trigger_notification_job_endpoint():
+    """
+    Manually trigger the notification processing job
+    This endpoint is for development and testing purposes
+    
+    Returns:
+        ResponseModel: Trigger operation result
+    """
+    try:
+        result = await trigger_notification_job()
+        
+        return ResponseModel(
+            success=True,
+            message="通知任務已手動觸發執行",
+            data=result
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"手動觸發通知任務失敗: {str(e)}"
+        )
+
+
+@router.get("/jobs/notification/status",
+            response_model=ResponseModel,
+            tags=["Jobs"],
+            summary="查看通知任務狀態",
+            description="查看通知處理任務的當前狀態")
+async def get_notification_job_status():
+    """
+    Get current status of the notification processing job
+    
+    Returns:
+        ResponseModel: Contains job status, last execution time, and result
+    """
+    try:
+        # Get general job status (will need to enhance for specific job types)
+        status_info = await get_job_status()
+        
+        # Filter or adapt for notification job if needed
+        return ResponseModel(
+            success=True,
+            message="通知任務狀態查詢成功",
+            data=status_info
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"查詢通知任務狀態失敗: {str(e)}"
+        )
+
+
+@router.get("/jobs/notification/history",
+            response_model=ResponseModel,
+            tags=["Jobs"],
+            summary="查看通知任務執行歷史",
+            description="分頁查看通知處理任務的執行歷史記錄")
+async def get_notification_execution_history(
+    page: int = Query(1, ge=1, description="頁數"),
+    limit: int = Query(10, ge=1, le=100, description="每頁筆數"),
+    status: str = Query(None, description="狀態篩選: success, failed, running, paused, resumed"),
+    db: Session = Depends(get_db)
+):
+    """
+    Get paginated execution history for the notification job
+    
+    Args:
+        page: Page number (starts from 1)
+        limit: Number of records per page
+        status: Filter by status (optional)
+        db: Database session
+        
+    Returns:
+        ResponseModel: Paginated execution history records
+    """
+    try:
+        skip = (page - 1) * limit
+        
+        # Get records with job_name filter for notification processor
+        from models.job_execution_history import JobExecutionHistory
+        query = db.query(JobExecutionHistory).filter(
+            JobExecutionHistory.job_name == "notification_processor"
+        )
+        
+        if status:
+            query = query.filter(JobExecutionHistory.status == status)
+        
+        executions = (
+            query.order_by(JobExecutionHistory.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+        
+        execution_responses = [
+            JobExecutionHistoryResponse.model_validate(execution) 
+            for execution in executions
+        ]
+        
+        return ResponseModel(
+            success=True,
+            message=f"通知任務執行歷史查詢成功，第 {page} 頁，共 {len(execution_responses)} 筆記錄",
+            data={
+                "executions": execution_responses,
+                "page": page,
+                "limit": limit,
+                "total_records": len(execution_responses)
+            }
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"查詢通知任務執行歷史失敗: {str(e)}"
+        )
+
+
+@router.get("/jobs/scheduler/summary",
+            response_model=ResponseModel,
+            tags=["Jobs"],
+            summary="排程器總覽",
+            description="查看所有排程任務的詳細資訊總表")
+async def get_scheduler_summary():
+    """
+    Get comprehensive overview of all scheduled jobs
+    
+    Returns:
+        ResponseModel: Complete scheduler and jobs information
+    """
+    try:
+        from scheduler.job_scheduler import scheduler_manager
+        
+        summary = scheduler_manager.get_scheduler_summary()
+        
+        return ResponseModel(
+            success=True,
+            message="排程器總覽查詢成功",
+            data=summary
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"查詢排程器總覽失敗: {str(e)}"
+        )
+
+
+@router.get("/jobs/all",
+            response_model=ResponseModel,
+            tags=["Jobs"],
+            summary="查看所有排程任務",
+            description="列出目前所有已排程的任務清單")
+async def get_all_jobs():
+    """
+    Get list of all scheduled jobs
+    
+    Returns:
+        ResponseModel: List of all jobs with their details
+    """
+    try:
+        from scheduler.job_scheduler import scheduler_manager
+        
+        jobs = scheduler_manager.get_all_jobs()
+        
+        return ResponseModel(
+            success=True,
+            message=f"查詢成功，共 {len(jobs)} 個排程任務",
+            data={"jobs": jobs}
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"查詢排程任務失敗: {str(e)}"
         )
 
 
@@ -298,9 +482,16 @@ async def scheduler_health_check():
         
         health_info = {
             "scheduler_running": scheduler_manager.is_running,
-            "job_scheduled": scheduler_manager.is_job_running("corporate_events_scraper"),
-            "job_paused": scheduler_manager.is_job_paused("corporate_events_scraper"),
-            "next_run_time": scheduler_manager.get_next_run_time("corporate_events_scraper")
+            "scraper_job": {
+                "scheduled": scheduler_manager.is_job_running("corporate_events_scraper"),
+                "paused": scheduler_manager.is_job_paused("corporate_events_scraper"),
+                "next_run_time": scheduler_manager.get_next_run_time("corporate_events_scraper")
+            },
+            "notification_job": {
+                "scheduled": scheduler_manager.is_job_running("notification_processor"),
+                "paused": scheduler_manager.is_job_paused("notification_processor"),
+                "next_run_time": scheduler_manager.get_next_run_time("notification_processor")
+            }
         }
         
         return ResponseModel(
