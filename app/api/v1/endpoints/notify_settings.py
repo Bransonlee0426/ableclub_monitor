@@ -37,8 +37,8 @@ router = APIRouter()
                             "notify_type": "email",
                             "email_address": "user@example.com",
                             "is_active": True,
-                            "created_at": "2024-01-01T00:00:00",
-                            "updated_at": "2024-01-01T00:00:00",
+                            "created_at": "2024-01-01-00:00",
+                            "updated_at": "2024-01-01-00:00",
                             "keywords": ["Python", "FastAPI"]
                         }
                     }
@@ -89,18 +89,8 @@ async def read_my_settings(
         keywords_list = []
     
     # Create response with keywords
-    setting_dict = {
-        "id": notify_setting.id,
-        "user_id": notify_setting.user_id,
-        "notify_type": notify_setting.notify_type,
-        "email_address": notify_setting.email_address,
-        "is_active": notify_setting.is_active,
-        "created_at": notify_setting.created_at,
-        "updated_at": notify_setting.updated_at,
-        "keywords": keywords_list
-    }
-    
-    setting_response = NotifySettingResponse.model_validate(setting_dict)
+    # Use Pydantic model directly to leverage TaiwanDatetimeMixin automatic formatting
+    setting_response = NotifySettingResponse.model_validate(notify_setting)
     return SuccessResponse(data=setting_response, message="查詢成功")
 
 
@@ -124,8 +114,8 @@ async def read_my_settings(
                             "notify_type": "email",
                             "email_address": "user@example.com",
                             "is_active": True,
-                            "created_at": "2024-01-01T00:00:00",
-                            "updated_at": "2024-01-01T00:00:00",
+                            "created_at": "2024-01-01-00:00",
+                            "updated_at": "2024-01-01-00:00",
                             "keywords": ["Python", "FastAPI"]
                         }
                     }
@@ -213,18 +203,8 @@ async def create_my_setting(
         keywords_list = []
     
     # Create response with keywords
-    setting_dict = {
-        "id": db_notify_setting.id,
-        "user_id": db_notify_setting.user_id,
-        "notify_type": db_notify_setting.notify_type,
-        "email_address": db_notify_setting.email_address,
-        "is_active": db_notify_setting.is_active,
-        "created_at": db_notify_setting.created_at,
-        "updated_at": db_notify_setting.updated_at,
-        "keywords": keywords_list
-    }
-    
-    setting_response = NotifySettingResponse.model_validate(setting_dict)
+    # Use Pydantic model directly to leverage TaiwanDatetimeMixin automatic formatting
+    setting_response = NotifySettingResponse.model_validate(db_notify_setting)
     
     # Return 201 response with SuccessResponse (same as GET endpoint)
     return SuccessResponse(data=setting_response, message="通知設定建立成功")
@@ -249,8 +229,8 @@ async def create_my_setting(
                             "notify_type": "telegram",
                             "email_address": None,
                             "is_active": True,
-                            "created_at": "2024-01-01T00:00:00",
-                            "updated_at": "2024-01-01T01:00:00",
+                            "created_at": "2024-01-01-00:00",
+                            "updated_at": "2024-01-01-01:00",
                             "keywords": ["React", "Vue"]
                         }
                     }
@@ -335,18 +315,8 @@ async def update_my_setting(
         keywords_list = []
     
     # Create response with keywords using the updated setting with relations
-    setting_dict = {
-        "id": updated_setting_with_relations.id,
-        "user_id": updated_setting_with_relations.user_id,
-        "notify_type": updated_setting_with_relations.notify_type,
-        "email_address": updated_setting_with_relations.email_address,
-        "is_active": updated_setting_with_relations.is_active,
-        "created_at": updated_setting_with_relations.created_at,
-        "updated_at": updated_setting_with_relations.updated_at,
-        "keywords": keywords_list
-    }
-    
-    setting_response = NotifySettingResponse.model_validate(setting_dict)
+    # Use Pydantic model directly to leverage TaiwanDatetimeMixin automatic formatting
+    setting_response = NotifySettingResponse.model_validate(updated_setting_with_relations)
     return SuccessResponse(data=setting_response, message="通知設定更新成功")
 
 

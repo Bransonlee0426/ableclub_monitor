@@ -3,6 +3,7 @@ from typing import List, Dict
 import asyncio
 from datetime import datetime
 from sqlalchemy.orm import Session
+from core.datetime_utils import format_datetime_taiwan
 from schemas.auth import ResponseModel
 from schemas.scraped_event import ScrapedEventCreate
 from scraper.tasks import scrape_main_menu, scrape_corporate_events
@@ -144,7 +145,7 @@ async def get_corporate_events(db: Session = Depends(get_db)):
                                 "start_date": saved_event.start_date.isoformat(),
                                 "end_date": saved_event.end_date.isoformat() if saved_event.end_date else None,
                                 "is_processed": saved_event.is_processed,
-                                "created_at": saved_event.created_at.isoformat()
+                                "created_at": format_datetime_taiwan(saved_event.created_at)
                             })
                         
                     except Exception as e:

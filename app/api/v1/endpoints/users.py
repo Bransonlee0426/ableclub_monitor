@@ -88,8 +88,8 @@ def check_user_status(
                             "username": "user@example.com",
                             "invite_code_used": "WELCOME2024",
                             "is_active": True,
-                            "created_at": "2024-01-01T00:00:00",
-                            "updated_at": "2024-01-01T00:00:00"
+                            "created_at": "2024-01-01-00:00",
+                            "updated_at": "2024-01-01-00:00"
                         }
                     }
                 }

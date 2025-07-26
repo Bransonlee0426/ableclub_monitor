@@ -49,9 +49,9 @@ router = APIRouter()
                             "code": "WELCOME2024",
                             "description": "2024年歡迎新用戶邀請碼",
                             "is_active": True,
-                            "expires_at": "2024-12-31T23:59:59Z",
-                            "created_at": "2024-01-01T00:00:00Z",
-                            "updated_at": "2024-01-01T00:00:00Z"
+                            "expires_at": "2024-12-31-23:59",
+                            "created_at": "2024-01-01-00:00",
+                            "updated_at": "2024-01-01-00:00"
                         }
                     }
                 }
@@ -123,9 +123,9 @@ async def create_invitation_code(
                                     "code": "WELCOME2024",
                                     "description": "2024年歡迎新用戶邀請碼",
                                     "is_active": True,
-                                    "expires_at": "2024-12-31T23:59:59Z",
-                                    "created_at": "2024-01-01T00:00:00Z",
-                                    "updated_at": "2024-01-01T00:00:00Z"
+                                    "expires_at": "2024-12-31-23:59",
+                                    "created_at": "2024-01-01-00:00",
+                                    "updated_at": "2024-01-01-00:00"
                                 }
                             ],
                             "total": 1,
@@ -182,9 +182,9 @@ async def get_invitation_codes(
                             "code": "WELCOME2024",
                             "description": "更新後的描述",
                             "is_active": False,
-                            "expires_at": "2024-12-31T23:59:59Z",
-                            "created_at": "2024-01-01T00:00:00Z",
-                            "updated_at": "2024-01-15T00:00:00Z"
+                            "expires_at": "2024-12-31-23:59",
+                            "created_at": "2024-01-01-00:00",
+                            "updated_at": "2024-01-15-00:00"
                         }
                     }
                 }
@@ -301,8 +301,8 @@ async def delete_invitation_code(
                                     "username": "user@example.com",
                                     "invite_code_used": "WELCOME2024",
                                     "is_active": True,
-                                    "created_at": "2024-01-01T00:00:00Z",
-                                    "updated_at": "2024-01-01T00:00:00Z"
+                                    "created_at": "2024-01-01-00:00",
+                                    "updated_at": "2024-01-01-00:00"
                                 }
                             ],
                             "total": 1,
@@ -360,8 +360,8 @@ async def get_users(
                             "username": "user@example.com",
                             "invite_code_used": "WELCOME2024",
                             "is_active": True,
-                            "created_at": "2024-01-01T00:00:00Z",
-                            "updated_at": "2024-01-01T00:00:00Z"
+                            "created_at": "2024-01-01-00:00",
+                            "updated_at": "2024-01-01-00:00"
                         }
                     }
                 }
@@ -417,8 +417,8 @@ async def get_user_by_id(
                             "username": "user@example.com",
                             "invite_code_used": "WELCOME2024",
                             "is_active": False,
-                            "created_at": "2024-01-01T00:00:00Z",
-                            "updated_at": "2024-01-15T00:00:00Z"
+                            "created_at": "2024-01-01-00:00",
+                            "updated_at": "2024-01-15-00:00"
                         }
                     }
                 }
@@ -536,8 +536,8 @@ async def delete_user(
                                     "notify_type": "email",
                                     "email_address": "user@example.com",
                                     "is_active": True,
-                                    "created_at": "2024-01-01T00:00:00Z",
-                                    "updated_at": "2024-01-01T00:00:00Z",
+                                    "created_at": "2024-01-01-00:00",
+                                    "updated_at": "2024-01-01-00:00",
                                     "keywords": ["Python", "FastAPI"]
                                 }
                             ],

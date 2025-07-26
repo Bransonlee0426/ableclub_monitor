@@ -5,6 +5,7 @@ from schemas.auth import ResponseModel
 from schemas.scraped_event import ScrapedEvent as ScrapedEventSchema
 from database.session import get_db
 from crud import crud_scraped_event
+from core.datetime_utils import format_datetime_taiwan
 
 router = APIRouter()
 
@@ -42,7 +43,7 @@ async def get_scraped_events(
                 "start_date": event.start_date.isoformat(),
                 "end_date": event.end_date.isoformat() if event.end_date else None,
                 "is_processed": event.is_processed,
-                "created_at": event.created_at.isoformat()
+                "created_at": format_datetime_taiwan(event.created_at)
             })
         
         return ResponseModel(
@@ -98,7 +99,7 @@ async def get_unprocessed_events(
                 "start_date": event.start_date.isoformat(),
                 "end_date": event.end_date.isoformat() if event.end_date else None,
                 "is_processed": event.is_processed,
-                "created_at": event.created_at.isoformat()
+                "created_at": format_datetime_taiwan(event.created_at)
             })
         
         return ResponseModel(
@@ -155,7 +156,7 @@ async def get_scraped_event(
             "start_date": event.start_date.isoformat(),
             "end_date": event.end_date.isoformat() if event.end_date else None,
             "is_processed": event.is_processed,
-            "created_at": event.created_at.isoformat()
+            "created_at": format_datetime_taiwan(event.created_at)
         }
         
         return ResponseModel(
@@ -274,7 +275,7 @@ async def mark_event_as_processed(
             "start_date": updated_event.start_date.isoformat(),
             "end_date": updated_event.end_date.isoformat() if updated_event.end_date else None,
             "is_processed": updated_event.is_processed,
-            "created_at": updated_event.created_at.isoformat()
+            "created_at": format_datetime_taiwan(updated_event.created_at)
         }
         
         return ResponseModel(
