@@ -10,8 +10,8 @@ COPY requirements.txt .
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Playwright browsers for web scraping
-RUN playwright install --with-deps chromium
+# Install Playwright browsers for web scraping (commented out for faster Cloud Run deployment)
+# RUN playwright install --with-deps chromium
 
 # Copy the rest of the application's code to the working directory
 COPY . .

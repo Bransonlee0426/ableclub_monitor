@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request, status, HTTPException
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime
 from app.api.v1.api import api_router
 from schemas.auth import ResponseModel
 from core.config import settings
@@ -128,7 +129,22 @@ def read_root():
     """
     Root endpoint to check API status.
     """
-    return {"status": "ok", "message": "Welcome to the AbleClub Monitor API!"}
+    return {
+        "status": "ok", 
+        "message": "Welcome to the AbleClub Monitor API!",
+        "version": "1.0.0",
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+
+@app.get("/health", 
+         tags=["Health"], 
+         summary="簡易健康檢查",
+         description="簡易健康檢查端點，用於 Cloud Run 健康監測")
+def health_check():
+    """
+    Simple health check endpoint for Cloud Run.
+    """
+    return {"status": "healthy"}
 
 
 
@@ -140,19 +156,30 @@ async def startup_event():
     """
     Initialize database and start scheduler on application startup
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
     try:
         # Initialize database
+        logger.info("正在初始化資料庫...")
         init_database()
+        logger.info("資料庫初始化完成")
         
         # Start job scheduler if enabled
         if settings.SCHEDULER_ENABLED:
-            from scheduler.job_scheduler import scheduler_manager
-            await scheduler_manager.start_scheduler()
+            logger.info("正在啟動任務排程器...")
+            try:
+                from scheduler.job_scheduler import scheduler_manager
+                await scheduler_manager.start_scheduler()
+                logger.info("任務排程器啟動完成")
+            except Exception as scheduler_error:
+                logger.error(f"任務排程器啟動失敗: {scheduler_error}")
+                # Continue startup even if scheduler fails
         else:
-            print("ℹ️  Job scheduler is disabled in settings")
+            logger.info("任務排程器已在設定中停用")
             
     except Exception as e:
-        print(f"Startup initialization failed: {e}")
+        logger.error(f"啟動初始化失敗: {e}")
         # Don't fail the startup, just log the error
 
 
