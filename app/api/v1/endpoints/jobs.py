@@ -96,7 +96,7 @@ async def get_last_execution(db: Session = Depends(get_db)):
         return ResponseModel(
             success=True,
             message="最新執行記錄查詢成功",
-            data=JobExecutionHistoryResponse.model_validate(latest_execution)
+            data=JobExecutionHistoryResponse.model_validate(latest_execution).model_dump()
         )
         
     except Exception as e:
