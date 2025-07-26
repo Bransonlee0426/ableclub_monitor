@@ -88,9 +88,21 @@ async def read_my_settings(
         # If accessing pre-loaded keywords fails, use empty list to avoid breaking the main operation
         keywords_list = []
     
-    # Create response with keywords
-    # Use Pydantic model directly to leverage TaiwanDatetimeMixin automatic formatting
-    setting_response = NotifySettingResponse.model_validate(notify_setting)
+    # Create response with keywords by manually constructing the data dict
+    # We cannot use model_validate directly because NotifySetting doesn't have keywords attribute
+    setting_data = {
+        "id": notify_setting.id,
+        "user_id": notify_setting.user_id,
+        "notify_type": notify_setting.notify_type,
+        "email_address": notify_setting.email_address,
+        "is_active": notify_setting.is_active,
+        "created_at": notify_setting.created_at,
+        "updated_at": notify_setting.updated_at,
+        "keywords": keywords_list  # Include the actual keywords
+    }
+    
+    # Use Pydantic model to leverage TaiwanDatetimeMixin automatic formatting
+    setting_response = NotifySettingResponse.model_validate(setting_data)
     return SuccessResponse(data=setting_response, message="查詢成功")
 
 
@@ -202,9 +214,21 @@ async def create_my_setting(
         # If accessing pre-loaded keywords fails, use empty list to avoid breaking the main operation
         keywords_list = []
     
-    # Create response with keywords
-    # Use Pydantic model directly to leverage TaiwanDatetimeMixin automatic formatting
-    setting_response = NotifySettingResponse.model_validate(db_notify_setting)
+    # Create response with keywords by manually constructing the data dict
+    # We cannot use model_validate directly because NotifySetting doesn't have keywords attribute
+    setting_data = {
+        "id": db_notify_setting.id,
+        "user_id": db_notify_setting.user_id,
+        "notify_type": db_notify_setting.notify_type,
+        "email_address": db_notify_setting.email_address,
+        "is_active": db_notify_setting.is_active,
+        "created_at": db_notify_setting.created_at,
+        "updated_at": db_notify_setting.updated_at,
+        "keywords": keywords_list  # Include the actual keywords
+    }
+    
+    # Use Pydantic model to leverage TaiwanDatetimeMixin automatic formatting
+    setting_response = NotifySettingResponse.model_validate(setting_data)
     
     # Return 201 response with SuccessResponse (same as GET endpoint)
     return SuccessResponse(data=setting_response, message="通知設定建立成功")
@@ -314,9 +338,22 @@ async def update_my_setting(
         # If accessing pre-loaded keywords fails, use empty list to avoid breaking the main operation
         keywords_list = []
     
+    # Create response with keywords by manually constructing the data dict
+    # We cannot use model_validate directly because NotifySetting doesn't have keywords attribute
+    setting_data = {
+        "id": updated_setting_with_relations.id,
+        "user_id": updated_setting_with_relations.user_id,
+        "notify_type": updated_setting_with_relations.notify_type,
+        "email_address": updated_setting_with_relations.email_address,
+        "is_active": updated_setting_with_relations.is_active,
+        "created_at": updated_setting_with_relations.created_at,
+        "updated_at": updated_setting_with_relations.updated_at,
+        "keywords": keywords_list  # Include the actual keywords
+    }
+    
     # Create response with keywords using the updated setting with relations
-    # Use Pydantic model directly to leverage TaiwanDatetimeMixin automatic formatting
-    setting_response = NotifySettingResponse.model_validate(updated_setting_with_relations)
+    # Use Pydantic model to leverage TaiwanDatetimeMixin automatic formatting
+    setting_response = NotifySettingResponse.model_validate(setting_data)
     return SuccessResponse(data=setting_response, message="通知設定更新成功")
 
 
