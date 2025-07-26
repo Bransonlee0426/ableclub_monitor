@@ -365,4 +365,3 @@ docker-compose down
 - ✅ 高測試覆蓋率
 - ✅ 完整的 API 文檔
 - ✅ Docker 容器化支援
-- TEST DEPLOY
