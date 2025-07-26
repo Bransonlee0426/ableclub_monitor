@@ -117,7 +117,28 @@ async def create_notify_setting(
         notify_setting_data=notify_setting_data
     )
     
-    setting_response = NotifySettingResponse.model_validate(db_notify_setting)
+    # Process keywords if provided
+    if notify_setting_data.keywords:
+        from crud import keyword as crud_keyword
+        # Replace all existing keywords with new ones
+        crud_keyword.replace_user_keywords(db, current_user.id, notify_setting_data.keywords)
+    
+    # Get the setting with keywords included for response
+    settings_with_keywords, _ = crud_notify_setting.get_settings_with_keywords_by_user_id(
+        db, current_user.id
+    )
+    
+    # Find the created setting in the response
+    created_setting = next(
+        (setting for setting in settings_with_keywords if setting["id"] == db_notify_setting.id),
+        None
+    )
+    
+    if created_setting:
+        setting_response = NotifySettingResponse.model_validate(created_setting)
+    else:
+        setting_response = NotifySettingResponse.model_validate(db_notify_setting)
+        setting_response.keywords = notify_setting_data.keywords or []
     
     # Return 201 response with proper format
     response_data = SuccessResponse(data=setting_response, message="通知設定建立成功")
