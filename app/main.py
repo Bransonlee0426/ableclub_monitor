@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, status, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.api import api_router
@@ -25,15 +25,19 @@ servers = [
 # Create FastAPI app instance with multiple server configurations
 app = FastAPI(
     title="AbleClub Monitor API",
-    description="API for monitoring and sending notifications for AbleClub courses.",
+    description="🚀 AbleClub Monitor API - 開發版",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
+    openapi_version="3.0.2",
     servers=servers,
-    # Configure Swagger UI to persist authorization
     swagger_ui_parameters={
         "persistAuthorization": True,
         "displayRequestDuration": True,
+        "defaultModelsExpandDepth": 1,
+        "defaultModelExpandDepth": 1,
+        "displayOperationId": False,
+        "filter": True
     }
 )
 
@@ -49,6 +53,22 @@ if getattr(settings, 'ENABLE_CORS', False):
         "http://localhost:8000",  # Alternative local
     ]
     
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=allowed_origins,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        allow_headers=["*"],
+    )
+else:
+    # Always enable basic CORS for API functionality
+    allowed_origins = ["*"] if settings.LOG_LEVEL == "DEBUG" else [
+        "https://ableclub-monitor-205163530380.asia-east1.run.app",  # Production
+        "https://ableclub-monitor-dev-205163530380.asia-east1.run.app",  # Development
+        "http://127.0.0.1:8000",  # Local development
+        "http://localhost:8000",  # Alternative local
+    ]
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allowed_origins,
@@ -109,6 +129,8 @@ def read_root():
     Root endpoint to check API status.
     """
     return {"status": "ok", "message": "Welcome to the AbleClub Monitor API!"}
+
+
 
 # Database initialization
 from database.init import init_database, get_database_info

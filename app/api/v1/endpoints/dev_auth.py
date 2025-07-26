@@ -27,7 +27,18 @@ DEV_MODE = settings.SECRET_KEY == "a_very_secret_key_that_should_be_changed"
     "/dev-login",
     response_model=SuccessResponse[TokenResponse],
     summary="🚧 開發用快速登入 (僅開發環境)",
-    description="⚠️ 僅供開發測試使用！產線環境必須關閉此端點。無需密碼即可取得 30 天有效期的 token。",
+    description="""
+    ⚠️ 僅供開發測試使用！產線環境必須關閉此端點。
+    
+    📋 功能特點：
+    - 無需密碼即可取得 30 天有效期的 token
+    - 支援 Swagger UI 認證持久化
+    
+    🔧 使用方式：
+    1. 呼叫此端點取得 access_token
+    2. 複製 token 並在 Swagger UI 右上角 🔒 Authorize 按鈕中設定
+    3. 設定後即使頁面重整，認證也會自動保持 ✨
+    """,
     tags=["🚧 Development Only"]
 )
 async def dev_quick_login(
@@ -47,7 +58,7 @@ async def dev_quick_login(
     if not user:
         raise ResourceNotFoundException(f"使用者 {username} 不存在")
     
-    if not user.is_active:
+    if not bool(user.is_active):
         raise BusinessLogicException("使用者帳號已被停用", ErrorCodes.ACCOUNT_DISABLED, 400)
     
     # Create long-lived token (30 days)
@@ -94,3 +105,5 @@ async def get_dev_token():
         data=token_data,
         message="🚧 開發 token 資訊取得成功"
     )
+
+

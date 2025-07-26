@@ -16,5 +16,6 @@ class User(Base):
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
 
-    # Relationship to NotifySetting model (commented out to avoid circular import)
-    # notify_settings = relationship("NotifySetting", back_populates="user")
+    # Relationships (using lazy loading strategy to optimize query performance)
+    notify_settings = relationship("NotifySetting", back_populates="user", lazy="select")
+    keywords = relationship("Keyword", back_populates="user", lazy="select")

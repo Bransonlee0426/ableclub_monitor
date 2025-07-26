@@ -4,11 +4,15 @@ from datetime import datetime
 import re
 
 
-class NotifySettingCreate(BaseModel):
-    """通知設定建立請求的資料模型"""
+class NotifySettingBase(BaseModel):
+    """通知設定的基礎資料模型"""
     notify_type: str = Field(..., description="通知類型")
-    email_address: Optional[str] = Field(default=None, description="Email 地址 (當 notify_type 為 email 時必填)")
-    keywords: Optional[List[str]] = Field(default=[], description="關鍵字列表")
+    email_address: Optional[str] = Field(default=None, description="Email 地址")
+    keywords: List[str] = Field(default=[], description="關鍵字列表")
+
+
+class NotifySettingCreate(NotifySettingBase):
+    """通知設定建立請求的資料模型"""
 
     @field_validator('notify_type')
     @classmethod
@@ -37,7 +41,7 @@ class NotifySettingCreate(BaseModel):
             "example": {
                 "notify_type": "email",
                 "email_address": "user@example.com",
-                "keywords": ["Python", "FastAPI", "程式設計"]
+                "keywords": ["Python", "FastAPI"]
             }
         }
     )
@@ -48,6 +52,7 @@ class NotifySettingUpdate(BaseModel):
     notify_type: Optional[str] = Field(default=None, description="通知類型")
     email_address: Optional[str] = Field(default=None, description="Email 地址")
     is_active: Optional[bool] = Field(default=None, description="是否啟用")
+    keywords: Optional[List[str]] = Field(default=None, description="關鍵字列表")
 
     @field_validator('notify_type')
     @classmethod
@@ -70,7 +75,8 @@ class NotifySettingUpdate(BaseModel):
             "example": {
                 "notify_type": "telegram",
                 "email_address": "newemail@example.com",
-                "is_active": True
+                "is_active": True,
+                "keywords": ["Python", "FastAPI", "React"]
             }
         }
     )
