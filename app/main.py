@@ -43,6 +43,8 @@ if getattr(settings, 'ENABLE_CORS', False):
     allowed_origins = ["*"] if settings.LOG_LEVEL == "DEBUG" else [
         "https://ableclub-monitor-205163530380.asia-east1.run.app",  # Production
         "https://ableclub-monitor-dev-205163530380.asia-east1.run.app",  # Development
+        "https://ableclub-monitor-prod.web.app",  # Firebase frontend (production)
+        "https://ableclub-monitor-prod.firebaseapp.com",  # Firebase frontend (legacy)
         "http://127.0.0.1:8000",  # Local development
         "http://localhost:8000",  # Alternative local
     ]
