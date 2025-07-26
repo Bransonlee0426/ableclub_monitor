@@ -165,16 +165,12 @@ async def startup_event():
         init_database()
         logger.info("資料庫初始化完成")
         
-        # Start job scheduler if enabled
+        # Start job scheduler if enabled (with delay for Cloud Run)
         if settings.SCHEDULER_ENABLED:
-            logger.info("正在啟動任務排程器...")
-            try:
-                from scheduler.job_scheduler import scheduler_manager
-                await scheduler_manager.start_scheduler()
-                logger.info("任務排程器啟動完成")
-            except Exception as scheduler_error:
-                logger.error(f"任務排程器啟動失敗: {scheduler_error}")
-                # Continue startup even if scheduler fails
+            logger.info("排程器將在 3 分鐘後啟動（讓容器先完成部署）")
+            # Schedule the scheduler to start after 3 minutes
+            import asyncio
+            asyncio.create_task(delayed_scheduler_start())
         else:
             logger.info("任務排程器已在設定中停用")
             
@@ -182,6 +178,27 @@ async def startup_event():
         logger.error(f"啟動初始化失敗: {e}")
         # Don't fail the startup, just log the error
 
+async def delayed_scheduler_start():
+    """
+    Start the scheduler after a delay to allow container to fully start
+    """
+    import logging
+    import asyncio
+    
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # Wait 3 minutes before starting scheduler
+        logger.info("等待 3 分鐘後啟動排程器...")
+        await asyncio.sleep(180)  # 3 minutes
+        
+        logger.info("正在啟動任務排程器...")
+        from scheduler.job_scheduler import scheduler_manager
+        await scheduler_manager.start_scheduler()
+        logger.info("任務排程器延遲啟動完成")
+        
+    except Exception as e:
+        logger.error(f"延遲啟動排程器失敗: {e}")
 
 @app.on_event("shutdown")
 async def shutdown_event():

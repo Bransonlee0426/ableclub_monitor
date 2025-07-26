@@ -1,10 +1,53 @@
-# scraper/tasks.py (Refactored to use Playwright)
+# scraper/tasks.py (Refactored to use Playwright with fallback handling)
 
 import asyncio
-from playwright.async_api import async_playwright, Page, Error
+import subprocess
+import sys
 from typing import List, Dict
 import time
 import os
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Try to import Playwright, install if not available
+try:
+    from playwright.async_api import async_playwright, Page, Error
+    PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    logger.warning("Playwright not available, will attempt installation on first use")
+    PLAYWRIGHT_AVAILABLE = False
+    async_playwright = None
+    Page = None
+    Error = None
+
+async def ensure_playwright_installed():
+    """
+    Ensure Playwright is installed and browsers are available
+    """
+    global PLAYWRIGHT_AVAILABLE, async_playwright, Page, Error
+    
+    if PLAYWRIGHT_AVAILABLE:
+        return True
+        
+    try:
+        logger.info("正在安裝 Playwright...")
+        # Install playwright package if not available
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "playwright"])
+        
+        # Install browsers
+        subprocess.check_call([sys.executable, "-m", "playwright", "install", "chromium"])
+        
+        # Re-import after installation
+        from playwright.async_api import async_playwright, Page, Error
+        PLAYWRIGHT_AVAILABLE = True
+        
+        logger.info("Playwright 安裝完成")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Playwright 安裝失敗: {e}")
+        return False
 
 # --- Function 1: Scrape Main Menu ---
 async def scrape_main_menu(page: Page) -> List[str]:
@@ -168,6 +211,11 @@ async def run_ableclub_scraper():
     """
     Orchestrates the entire scraping process from start to finish using Playwright.
     """
+    # Ensure Playwright is available before proceeding
+    if not await ensure_playwright_installed():
+        logger.error("無法安裝 Playwright，爬蟲任務無法執行")
+        return {"error": "Playwright installation failed", "total_scraped": 0, "total_saved_new": 0}
+    
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         page = await browser.new_page()
